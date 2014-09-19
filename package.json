@@ -8,6 +8,7 @@
         "express": "latest",
         "request": "latest",
         "tough-cookie": "latest",
-        "cheerio": "latest"
+        "cheerio": "latest",
+        "commander": "latest"
     }
 }

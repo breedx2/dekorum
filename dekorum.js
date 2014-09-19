@@ -4,6 +4,7 @@ var url = require('url');
 var request = require('request');
 var cheerio = require('cheerio');
 var app = express();
+var program = require('commander');
 
 request = request.defaults({jar: true});
 
@@ -74,12 +75,27 @@ function queryStringFromObj(obj){
 }
 
 function grabPageInfoFromSearchResults($){
-    var pageInfo = $.root().find("td.textbold[align='center']").filter(function(index, elem){
-        return $(this).text().trim().slice(0, 4) == "Page";
-    }).first().text().trim().split("\n").filter(function(x){
-        return x.indexOf("Page") > -1;
-    })[0].replace(/\r/g, "").replace(/.*Page (\d+) of (\d+).*/m, "$1,$2").split(',');
-    return {'current': pageInfo[0], 'total': pageInfo[1]};
+    try {
+//        var pageInfo = $.root().find("td.textbold[align='center']").filter(function (index, elem) {
+//            return $(this).text().match(/Page \d+ of \d+/);
+//        }).first().text().trim().split("\n").filter(function (x) {
+//            var testx = (x.indexOf("Page") > -1);
+//            console.log("DEBUG: chickin? " + testx);
+//            return x.indexOf("Page") > -1;
+//        })[0].replace(/\r/g, "").replace(/.*Page (\d+) of (\d+).*/m, "$1,$2").split(',');
+        var pageInfo = $.root().find("td.textbold[align='center']").filter(function (index, elem) {
+            return $(this).text().match(/Page \d+ of \d+/);
+        }).first().text().replace(/(.|[\r?\n])*Page (\d+) of (\d+)(.|[\r?\n])*/m, "$2,$3").split(',');
+        return {'current': pageInfo[0].trim(), 'total': pageInfo[1].trim()};
+    }
+    catch(err){
+        console.log(err);
+        $.root().find("td.textbold[align='center']").each(function(i, e){
+           console.log("MATCH THO");
+            console.log($(this).text());
+        });
+//        console.log($.root().html());
+    }
 }
 
 function doSearchColor(colorName, colorId, html, wallpapersAndBordersUrl){
@@ -97,6 +113,16 @@ function doSearchColor(colorName, colorId, html, wallpapersAndBordersUrl){
     console.log("Here we submit to " + actionUri + " ... ");
 
     request(actionUri, buildSearchResultsProcessor(colorName, colorId, actionUri));
+}
+
+function filterKeys(obj, keySubstring){
+    var result = {};
+    for(var key in obj){
+        if(key.toLowerCase().indexOf(keySubstring) > -1){
+            result[key] = obj[key];
+        }
+    }
+    return result;
 }
 
 function buildSearchResultsProcessor(colorName, colorId, actionUri){
@@ -117,10 +143,17 @@ function buildSearchResultsProcessor(colorName, colorId, actionUri){
             console.log("http://sherwin.scene7.com/is/image/sw/" + filename);
         });
 
-        //Next page...
-        var nextPageUrl = $.root().find("img[alt='Next Page »']").first().parent().attr('href');
-        nextPageUrl = url.resolve(actionUri, nextPageUrl);
-        console.log("Next page: " + nextPageUrl);
+        if(pageInfo['current'] == pageInfo['total']) {       //more pages remaining...
+            console.log("No more pages for color = " + colorName);
+        }
+        else{
+            //Next page...
+            var nextPageUrl = $.root().find("img[alt='Next Page »']").first().parent().attr('href');
+            nextPageUrl = url.resolve(actionUri, nextPageUrl);
+            console.log("Next page: " + nextPageUrl);
+
+            request(nextPageUrl, buildSearchResultsProcessor(colorName, colorId, nextPageUrl));
+        }
     };
 }
 
@@ -133,6 +166,11 @@ function scrape() {
         request(wallpapersAndBordersUrl, function (error, response, html) {
 
             var colors = getColors(html);
+            console.log(colors);
+            if(program.color){
+                console.log("Filtering colors based on commandline...");
+                colors = filterKeys(colors, program.color);
+            }
             console.log(colors);
 
             for (var colorName in colors) {
@@ -147,6 +185,14 @@ function scrape() {
 //app.get('/scrape', scrape);
 //app.listen('8081');
 //console.log('Magic happens on port 8081');
+
+
+program.version('0.0.1')
+    .option('-c, --color <color>', 'Just do colors matching <color>')
+    .parse(process.argv);
+
+console.log("Color is " + program.color);
+
 scrape();
 
 exports = module.exports = app;
