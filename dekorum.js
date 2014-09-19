@@ -73,6 +73,15 @@ function queryStringFromObj(obj){
     return "?" + result;
 }
 
+function grabPageInfoFromSearchResults($){
+    var pageInfo = $.root().find("td.textbold[align='center']").filter(function(index, elem){
+        return $(this).text().trim().slice(0, 4) == "Page";
+    }).first().text().trim().split("\n").filter(function(x){
+        return x.indexOf("Page") > -1;
+    })[0].replace(/\r/g, "").replace(/.*Page (\d+) of (\d+).*/m, "$1,$2").split(',');
+    return {'current': pageInfo[0], 'total': pageInfo[1]};
+}
+
 function doSearchColor(colorName, colorId, html, wallpapersAndBordersUrl){
     console.log("Submitting form for color: " + colorName + " (id=" + colorId + ")");
 
@@ -84,31 +93,35 @@ function doSearchColor(colorName, colorId, html, wallpapersAndBordersUrl){
     var actionUri = form.attr('action');
     actionUri = url.resolve(wallpapersAndBordersUrl, actionUri);
     actionUri += queryString;
+
     console.log("Here we submit to " + actionUri + " ... ");
-    request(actionUri, function (err, resp, html) {
+
+    request(actionUri, buildSearchResultsProcessor(colorName, colorId, actionUri));
+}
+
+function buildSearchResultsProcessor(colorName, colorId, actionUri){
+    return function (err, resp, html) {
         if (err) {
             console.log("ERROR: " + err);
         }
         console.log("Processing search results...");
         var $ = cheerio.load(html);
-        var pageInfos = $.root().find("td.textbold[align='center']").filter(function(index, elem){
-            return $(this).text().trim().slice(0, 4) == "Page";
-        }).first().text().trim().split("\n").filter(function(x){
-            return x.indexOf("Page") > -1;
-        })[0].replace(/\r/g, "").replace(/.*Page (\d+) of (\d+).*/m, "$1,$2").split(',');
-        var currentPage = pageInfos[0];
-        var totalPages = pageInfos[1];
-        console.log("Working on page " + currentPage + " of " + totalPages + " for color = " + colorName);
+        var pageInfo = grabPageInfoFromSearchResults($);
+        console.log("Working on page " + pageInfo['current'] + " of " + pageInfo['total'] + " for color = " + colorName);
+
         $.root().find("a[onmouseover=\"window.status='View Pattern Details';return true;\"]").each(function(i, elem){
             var srcbit = $(this).find('img').first().attr('src').split('&')
                 .filter(function(x){ return x.slice(0,3) == "src"})[0];
             var filename = srcbit.slice(4,srcbit.length);
+            //TODO: Don't hard code path, traverse and find it...
             console.log("http://sherwin.scene7.com/is/image/sw/" + filename);
-//           console.log(" *** " + $(this).attr('href'));
         });
-        // $.find("a[alt='View detail']") or something like this
-//        console.log(html);
-    });
+
+        //Next page...
+        var nextPageUrl = $.root().find("img[alt='Next Page »']").first().parent().attr('href');
+        nextPageUrl = url.resolve(actionUri, nextPageUrl);
+        console.log("Next page: " + nextPageUrl);
+    };
 }
 
 function scrape() {
