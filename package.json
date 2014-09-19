@@ -1,0 +1,13 @@
+{
+    "name": "dekorum",
+    "version": "0.0.1",
+    "description": "dekorum",
+    "main": "dekorum.js",
+    "author": "breedx",
+    "dependencies": {
+        "express": "latest",
+        "request": "latest",
+        "tough-cookie": "latest",
+        "cheerio": "latest"
+    }
+}
