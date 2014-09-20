@@ -5,13 +5,23 @@ var program = require('commander');
 var scrape = require('./dekorum-scrape');
 
 program.version('0.0.1')
-    .option('-c, --color <color>', 'Just do colors matching <color>')
+    .option('-d, --download', 'Download mode')
+    .option('-s, --scrape', 'Scrape mode')
+    .option('-c, --color <color>', 'Just scrape colors matching <color>')
     .parse(process.argv);
 
-if (program.color) {
-    console.log("Limiting scrape to just " + program.color);
+if (program.scrape) {
+    console.log("Initiating scrape mode...");
+    if (program.color) {
+        console.log("Limiting scrape to just " + program.color);
+    }
+    scrape.scrape(program.color);
 }
-
-scrape.scrape(program.color);
+else if(program.download){
+    console.log("Initiating download mode!");
+}
+else {
+    console.log("Must choose one of --scrape or --download");
+}
 
 exports = module.exports = app;
