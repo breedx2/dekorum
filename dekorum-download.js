@@ -1,5 +1,6 @@
 var fs = require('fs');
 var url = require('url');
+var request = require('request');
 
 function readAllFiles(indir) {
     var filenames = fs.readdirSync(indir);
@@ -19,6 +20,16 @@ function readAllFiles(indir) {
     return bigList;
 }
 
+function filenameFromUrl(outdir, webUrl){
+    var filename = url.parse(webUrl).pathname.split('/').slice(-1).toString();
+    return url.resolve(outdir + "/", filename);
+}
+
+function fileExists(outdir, webUrl){
+    var filename = filenameFromUrl(outdir, webUrl);
+    return fs.existsSync(filename);
+}
+
 function download(indir, outdir) {
     console.log("Reading content from all .txt files in " + indir);
     var allUrls = readAllFiles(indir);
@@ -28,6 +39,47 @@ function download(indir, outdir) {
         return (pos == 0) || (item != allUrls[pos - 1]);
     });
     console.log("Filtered down to " + uniqueUrls.length + " unique urls");
+    console.log("Checking to see which have already been downloaded....");
+
+    var neededUrls = uniqueUrls.filter(function(webUrl){
+        var exists = fileExists(outdir, webUrl);
+        if(exists){
+            console.log("Skipping " + webUrl + " (exists)");
+        }
+        return !exists;
+    });
+
+    function downloadUrls(urls){
+        if(urls.length == 0){
+            console.log("No more urls to fetch!  Wow.  All done.");
+            return;
+        }
+
+        var currentUrl = urls.pop();
+        var outputFilename = filenameFromUrl(outdir, currentUrl);
+
+        function completeHandler(err, resp, html){
+            if(err){
+                console.log("Failed to download " + currentUrl);
+                console.log(err);
+                if(fs.existsSync(outputFilename)){
+                    fs.unlinkSync(outputFilename);
+                    console.log("Removed partial/broken file: " + outputFilename);
+                }
+                urls.unshift(currentUrl);
+                console.log("Waiting 5 seconds and trying again...");
+                setTimeout(function(){ downloadUrls(urls);}, 5000);
+                return;
+            }
+            console.log("Download complete!");
+            setTimeout(function(){ downloadUrls(urls);}, 2500);
+        }
+
+        console.log("Fetching " + currentUrl + " ... ");
+        request(currentUrl, completeHandler).pipe(fs.createWriteStream(outputFilename));
+    }
+
+    downloadUrls(neededUrls);
 }
 
 module.exports = {
