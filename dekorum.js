@@ -92,7 +92,7 @@ function grabPageInfoFromSearchResults($) {
 }
 
 function buildFilename(colorName) {
-    return colorName.replace(/\//g, "_").toLowerCase() + ".urls.txt";
+    return colorName.replace(/[/() ]/g, "_").toLowerCase() + ".urls.txt";
 }
 
 function openOutputFile(color){
