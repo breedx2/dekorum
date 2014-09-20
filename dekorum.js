@@ -63,10 +63,10 @@ function buildSubmitColorForm($, colorName, colorId) {
     return result;
 }
 
-function queryStringFromObj(obj){
+function queryStringFromObj(obj) {
     var result = "";
-    for(var name in obj){
-        if(result.length > 0){
+    for (var name in obj) {
+        if (result.length > 0) {
             result += "&";
         }
         result += name + "=" + encodeURIComponent(obj[name]);
@@ -74,32 +74,22 @@ function queryStringFromObj(obj){
     return "?" + result;
 }
 
-function grabPageInfoFromSearchResults($){
-    try {
-//        var pageInfo = $.root().find("td.textbold[align='center']").filter(function (index, elem) {
-//            return $(this).text().match(/Page \d+ of \d+/);
-//        }).first().text().trim().split("\n").filter(function (x) {
-//            var testx = (x.indexOf("Page") > -1);
-//            console.log("DEBUG: chickin? " + testx);
-//            return x.indexOf("Page") > -1;
-//        })[0].replace(/\r/g, "").replace(/.*Page (\d+) of (\d+).*/m, "$1,$2").split(',');
-        var pageInfo = $.root().find("td.textbold[align='center']").filter(function (index, elem) {
-            return $(this).text().match(/Page \d+ of \d+/);
-        }).first().text().replace(/(.|[\r?\n])*Page (\d+) of (\d+)(.|[\r?\n])*/m, "$2,$3").split(',');
-        return {'current': pageInfo[0].trim(), 'total': pageInfo[1].trim()};
-    }
-    catch(err){
-        console.log(err);
-        $.root().find("td.textbold[align='center']").each(function(i, e){
-           console.log("MATCH THO");
-            console.log($(this).text());
-        });
-//        console.log($.root().html());
-    }
+function grabPageInfoFromSearchResults($) {
+    var pageInfo = $.root().find("td.textbold[align='center']").filter(function (index, elem) {
+        return $(this).text().match(/Page \d+ of \d+/);
+    }).first().text().replace(/(.|[\r?\n])*Page (\d+) of (\d+)(.|[\r?\n])*/m, "$2,$3").split(',');
+    return {'current': pageInfo[0].trim(), 'total': pageInfo[1].trim()};
 }
 
-function doSearchColor(colorName, colorId, html, wallpapersAndBordersUrl){
+function buildFilename(colorName) {
+    return colorName.replace(/\//, "_").toLowerCase() + ".urls.txt";
+}
+function doSearchColor(colorName, colorId, html, wallpapersAndBordersUrl) {
     console.log("Submitting form for color: " + colorName + " (id=" + colorId + ")");
+
+    var filename = buildFilename(colorName);
+    var fd = fs.openSync(filename, "wx");
+    console.log("Opened output file: " + filename);
 
     var $ = cheerio.load(html);
     var formData = buildSubmitColorForm($, colorName, colorId);
@@ -112,20 +102,20 @@ function doSearchColor(colorName, colorId, html, wallpapersAndBordersUrl){
 
     console.log("Here we submit to " + actionUri + " ... ");
 
-    request(actionUri, buildSearchResultsProcessor(colorName, colorId, actionUri));
+    request(actionUri, buildSearchResultsProcessor(colorName, colorId, actionUri, fd));
 }
 
-function filterKeys(obj, keySubstring){
+function filterKeys(obj, keySubstring) {
     var result = {};
-    for(var key in obj){
-        if(key.toLowerCase().indexOf(keySubstring) > -1){
+    for (var key in obj) {
+        if (key.toLowerCase().indexOf(keySubstring) > -1) {
             result[key] = obj[key];
         }
     }
     return result;
 }
 
-function buildSearchResultsProcessor(colorName, colorId, actionUri){
+function buildSearchResultsProcessor(colorName, colorId, actionUri, fd) {
     return function (err, resp, html) {
         if (err) {
             console.log("ERROR: " + err);
@@ -135,24 +125,30 @@ function buildSearchResultsProcessor(colorName, colorId, actionUri){
         var pageInfo = grabPageInfoFromSearchResults($);
         console.log("Working on page " + pageInfo['current'] + " of " + pageInfo['total'] + " for color = " + colorName);
 
-        $.root().find("a[onmouseover=\"window.status='View Pattern Details';return true;\"]").each(function(i, elem){
+        $.root().find("a[onmouseover=\"window.status='View Pattern Details';return true;\"]").each(function (i, elem) {
             var srcbit = $(this).find('img').first().attr('src').split('&')
-                .filter(function(x){ return x.slice(0,3) == "src"})[0];
-            var filename = srcbit.slice(4,srcbit.length);
+                .filter(function (x) {
+                    return x.slice(0, 3) == "src"
+                })[0];
+            var filename = srcbit.slice(4, srcbit.length);
             //TODO: Don't hard code path, traverse and find it...
-            console.log("http://sherwin.scene7.com/is/image/sw/" + filename);
+            var imageUrl = "http://sherwin.scene7.com/is/image/sw/" + filename;
+            console.log(imageUrl);
+            fs.writeSync(fd, imageUrl + "\n");
         });
 
-        if(pageInfo['current'] == pageInfo['total']) {       //more pages remaining...
+        if (pageInfo['current'] == pageInfo['total']) {       //more pages remaining...
             console.log("No more pages for color = " + colorName);
+            fs.closeSync(fd);
+            console.log("Closed output file: " + buildFilename(colorName));
         }
-        else{
+        else {
             //Next page...
             var nextPageUrl = $.root().find("img[alt='Next Page »']").first().parent().attr('href');
             nextPageUrl = url.resolve(actionUri, nextPageUrl);
             console.log("Next page: " + nextPageUrl);
 
-            request(nextPageUrl, buildSearchResultsProcessor(colorName, colorId, nextPageUrl));
+            request(nextPageUrl, buildSearchResultsProcessor(colorName, colorId, nextPageUrl, fd));
         }
     };
 }
@@ -167,7 +163,7 @@ function scrape() {
 
             var colors = getColors(html);
             console.log(colors);
-            if(program.color){
+            if (program.color) {
                 console.log("Filtering colors based on commandline...");
                 colors = filterKeys(colors, program.color);
             }
@@ -176,7 +172,7 @@ function scrape() {
             for (var colorName in colors) {
                 var colorId = colors[colorName];
                 doSearchColor(colorName, colorId, html, wallpapersAndBordersUrl);
-                break;
+                break;  //DEBUG DEBUG ONLY
             }
         });
     });
