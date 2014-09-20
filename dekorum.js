@@ -39,14 +39,14 @@ function getColors(html) {
     eval(cwptxtRaw);
     var cwpidRaw = findFirstLineStartingWith(html, "var cwpids");
     eval(cwpidRaw);
-    var result = {};
+    var result = [];
     for (i = 0; i < cwptxt.length; i++) {
-        result[cwptxt[i]] = cwpids[i];
+        result.push({"name": cwptxt[i], "id": cwpids[i]});
     }
     return result;
 }
 
-function buildSubmitColorForm($, colorName, colorId) {
+function buildColorForm($, color) {
     var form = $("form[name='coveringSearch']");
     var result = {};
     form.find('input, fieldset input, fieldset select').each(function (index, element) {
@@ -57,8 +57,8 @@ function buildSubmitColorForm($, colorName, colorId) {
         }
     });
     result['radsearchtype'] = 'wallpapers';
-    result['color'] = colorId;
-    result['colorname'] = colorName;
+    result['color'] = color['id'];
+    result['colorname'] = color['name'];
     result['coveringsearch.x'] = 1;        //PFM, snarfed from the SW js
     return result;
 }
@@ -75,47 +75,64 @@ function queryStringFromObj(obj) {
 }
 
 function grabPageInfoFromSearchResults($) {
-    var pageInfo = $.root().find("td.textbold[align='center']").filter(function (index, elem) {
-        return $(this).text().match(/Page \d+ of \d+/);
-    }).first().text().replace(/(.|[\r?\n])*Page (\d+) of (\d+)(.|[\r?\n])*/m, "$2,$3").split(',');
-    return {'current': pageInfo[0].trim(), 'total': pageInfo[1].trim()};
+    try {
+        var pageInfo = $.root().find("td.textbold[align='center']").filter(function (index, elem) {
+            return $(this).text().match(/Page \d+ of \d+/);
+        }).first().text().replace(/(.|[\r?\n])*Page (\d+) of (\d+)(.|[\r?\n])*/m, "$2,$3").split(',');
+        return {'current': pageInfo[0].trim(), 'total': pageInfo[1].trim()};
+    }
+    catch(err){
+        console.log("Error finding page number info")
+        console.log(e);
+        console.log("First blood: ");
+        console.log($.root().find("td.textbold[align='center']").filter(function (index, elem) {
+            return $(this).text().match(/Page \d+ of \d+/);
+        }).first().text());
+    }
 }
 
 function buildFilename(colorName) {
-    return colorName.replace(/\//, "_").toLowerCase() + ".urls.txt";
+    return colorName.replace(/\//g, "_").toLowerCase() + ".urls.txt";
 }
-function doSearchColor(colorName, colorId, html, wallpapersAndBordersUrl) {
-    console.log("Submitting form for color: " + colorName + " (id=" + colorId + ")");
 
-    var filename = buildFilename(colorName);
+function openOutputFile(color){
+    var filename = buildFilename(color['name']);
     var fd = fs.openSync(filename, "wx");
     console.log("Opened output file: " + filename);
+    return fd;
+}
 
-    var $ = cheerio.load(html);
-    var formData = buildSubmitColorForm($, colorName, colorId);
-    var queryString = queryStringFromObj(formData);
+function searchColors(colors, context) {
+
+    if (!colors.length) {
+        console.log("No more colors.  All done scraping!");
+        return;
+    }
+
+    var color = colors.pop();
+    searchColor(color, colors, context);
+}
+
+function searchColor(color, colors, context) {
+
+    var $ = context['$'];
+
+    var fd = openOutputFile(color);
+
+    console.log("Submitting form for color: " + color['name'] + " (id=" + color['id'] + ")");
 
     var form = $("form[name='coveringSearch']");
     var actionUri = form.attr('action');
-    actionUri = url.resolve(wallpapersAndBordersUrl, actionUri);
-    actionUri += queryString;
+    actionUri = url.resolve(context['referer'], actionUri);
+    var formData = buildColorForm($, color);
+    actionUri += queryStringFromObj(formData);
 
     console.log("Here we submit to " + actionUri + " ... ");
 
-    request(actionUri, buildSearchResultsProcessor(colorName, colorId, actionUri, fd));
+    request(actionUri, buildSearchResultsProcessor(color, colors, actionUri, fd, context));
 }
 
-function filterKeys(obj, keySubstring) {
-    var result = {};
-    for (var key in obj) {
-        if (key.toLowerCase().indexOf(keySubstring) > -1) {
-            result[key] = obj[key];
-        }
-    }
-    return result;
-}
-
-function buildSearchResultsProcessor(colorName, colorId, actionUri, fd) {
+function buildSearchResultsProcessor(color, colors, actionUri, fd, context) {
     return function (err, resp, html) {
         if (err) {
             console.log("ERROR: " + err);
@@ -123,7 +140,7 @@ function buildSearchResultsProcessor(colorName, colorId, actionUri, fd) {
         console.log("Processing search results...");
         var $ = cheerio.load(html);
         var pageInfo = grabPageInfoFromSearchResults($);
-        console.log("Working on page " + pageInfo['current'] + " of " + pageInfo['total'] + " for color = " + colorName);
+        console.log("Working on page " + pageInfo['current'] + " of " + pageInfo['total'] + " for color = " + color['name']);
 
         $.root().find("a[onmouseover=\"window.status='View Pattern Details';return true;\"]").each(function (i, elem) {
             var srcbit = $(this).find('img').first().attr('src').split('&')
@@ -137,10 +154,11 @@ function buildSearchResultsProcessor(colorName, colorId, actionUri, fd) {
             fs.writeSync(fd, imageUrl + "\n");
         });
 
-        if (pageInfo['current'] == pageInfo['total']) {       //more pages remaining...
-            console.log("No more pages for color = " + colorName);
+        if (pageInfo['current'] == pageInfo['total']) {       //no more pages remaining...
+            console.log("No more pages for color = " + color['name']);
             fs.closeSync(fd);
-            console.log("Closed output file: " + buildFilename(colorName));
+            console.log("Closed output file: " + buildFilename(color['name']));
+            setImmediate(function(){ searchColors(colors, context) });
         }
         else {
             //Next page...
@@ -148,7 +166,7 @@ function buildSearchResultsProcessor(colorName, colorId, actionUri, fd) {
             nextPageUrl = url.resolve(actionUri, nextPageUrl);
             console.log("Next page: " + nextPageUrl);
 
-            request(nextPageUrl, buildSearchResultsProcessor(colorName, colorId, nextPageUrl, fd));
+            request(nextPageUrl, buildSearchResultsProcessor(color, colors, nextPageUrl, fd, context));
         }
     };
 }
@@ -165,29 +183,26 @@ function scrape() {
             console.log(colors);
             if (program.color) {
                 console.log("Filtering colors based on commandline...");
-                colors = filterKeys(colors, program.color);
+                colors = colors.filter(function (color) {
+                    return color['name'].toLowerCase().indexOf(program.color) > -1;
+                });
             }
             console.log(colors);
 
-            for (var colorName in colors) {
-                var colorId = colors[colorName];
-                doSearchColor(colorName, colorId, html, wallpapersAndBordersUrl);
-                break;  //DEBUG DEBUG ONLY
-            }
+            var $ = cheerio.load(html);
+
+            searchColors(colors, {'$': $, 'referer': wallpapersAndBordersUrl});
         });
     });
 }
-
-//app.get('/scrape', scrape);
-//app.listen('8081');
-//console.log('Magic happens on port 8081');
-
 
 program.version('0.0.1')
     .option('-c, --color <color>', 'Just do colors matching <color>')
     .parse(process.argv);
 
-console.log("Color is " + program.color);
+if (program.color) {
+    console.log("Limiting scrape to just " + program.color);
+}
 
 scrape();
 
