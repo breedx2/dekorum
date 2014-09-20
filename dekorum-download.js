@@ -66,7 +66,7 @@ function download(indir, outdir) {
                     fs.unlinkSync(outputFilename);
                     console.log("Removed partial/broken file: " + outputFilename);
                 }
-                urls.unshift(currentUrl);
+                urls.push(currentUrl);
                 console.log("Waiting 5 seconds and trying again...");
                 setTimeout(function(){ downloadUrls(urls);}, 5000);
                 return;
