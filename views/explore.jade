@@ -1,11 +1,15 @@
 doctype html
 html(lang=en)
 	head
-		link(rel='stylesheet', href='/explore.css')
 		title Tile explorer
+		link(rel='stylesheet', href='/explore.css')
+		script(type='text/javascript', src='//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js')
+		script(type='text/javascript', src='/explore.js')
 	body
 		h1 Tile explorer:
-	#names
-		select
-			each name in names
-				option(value=name)= name
+	#elblocko
+		#namesWrap
+			select#names(size=60, onchange='exploreTile()')
+				each name in names
+					option(value=name)= name
+		img#daimg

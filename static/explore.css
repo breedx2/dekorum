@@ -1,3 +1,16 @@
 body {
 	font-family: Helvetica,Arial;
 }
+
+#elblocko {
+	white-space: nowrap;
+}
+
+#names {
+	font-size: 9px;
+}
+
+#namesWrap {
+	float: left;
+	margin-right: 20px;
+}
