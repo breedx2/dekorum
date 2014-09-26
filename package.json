@@ -9,6 +9,7 @@
         "request": "latest",
         "tough-cookie": "latest",
         "cheerio": "latest",
-        "commander": "latest"
+        "commander": "latest",
+		"jade": "latest"
     }
 }

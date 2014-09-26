@@ -1,0 +1,11 @@
+doctype html
+html(lang=en)
+	head
+		link(rel='stylesheet', href='/explore.css')
+		title Tile explorer
+	body
+		h1 Tile explorer:
+	#names
+		select
+			each name in names
+				option(value=name)= name
