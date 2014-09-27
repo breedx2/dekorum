@@ -9,7 +9,12 @@ html(lang=en)
 		h1 Tile explorer:
 	#elblocko
 		#namesWrap
+			input#usecnv(type="checkbox", name="usecnv", onchange='toggleUseCanvas()')
+			| canvas
+			br
 			select#names(size=60, onchange='exploreTile()')
 				each name in names
 					option(value=name)= name
+			p#size
 		img#daimg
+		canvas#cnv(width=1280, height=720)

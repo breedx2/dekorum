@@ -4,6 +4,7 @@ body {
 
 #elblocko {
 	white-space: nowrap;
+	font-size: 10px;
 }
 
 #names {
@@ -13,4 +14,14 @@ body {
 #namesWrap {
 	float: left;
 	margin-right: 20px;
+}
+
+#cnv {
+	width: 1280px;
+	height: 720px;
+	display: none;
+	border: solid silver 1px;
+}
+
+#size {
 }
