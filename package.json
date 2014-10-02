@@ -10,6 +10,8 @@
         "tough-cookie": "latest",
         "cheerio": "latest",
         "commander": "latest",
-		"jade": "latest"
+		"jade": "latest",
+		"get-pixels": "latest",
+		"pngjs": "latest"
     }
 }

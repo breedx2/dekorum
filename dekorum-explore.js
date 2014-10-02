@@ -1,5 +1,6 @@
 var express = require('express');
 var fs = require('fs');
+var imgproc = require('./dekorum-imgproc');
 
 exports = module.exports
 
@@ -21,6 +22,13 @@ function explore(dir){
 	console.log("Loaded " + filenames.length + " filenames from " + dir);
 	app.get('/', function(req, res){
 		res.render('explore.jade', { names: filenames });
+	});
+
+	app.get('/scaled/:filename', function(req, res){
+		var filename = dir + '/' + req.params.filename;
+		imgproc.make720p(filename, function(png){
+			//TODO: Write response...
+		});
 	});
 
 	var server = app.listen(8155, function() {
