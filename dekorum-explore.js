@@ -27,7 +27,12 @@ function explore(dir){
 	app.get('/scaled/:filename', function(req, res){
 		var filename = dir + '/' + req.params.filename;
 		imgproc.make720p(filename, function(png){
-			//TODO: Write response...
+			res.writeHead(200, {
+		    	'Content-Type': "image/png", 
+				//'Content-Length': stat.size,
+				//'Last-Modified': stat.mtime
+			});
+			png.pipe(res);
 		});
 	});
 

@@ -29,8 +29,9 @@ function make720p(filename, callback){
 				png.data[index + 3] = pixels.get(y, x, 3);
 			}
 		}
-		png.pack().pipe(fs.createWriteStream('/tmp/out.png'));
-		console.log("Written.");
+		callback(png.pack());
+		//png.pack().pipe(fs.createWriteStream('/tmp/out.png'));
+		//console.log("Written.");
 	});
 }
 
