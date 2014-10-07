@@ -9,12 +9,20 @@ html(lang=en)
 		h1 Tile explorer:
 	#elblocko
 		#namesWrap
-			input#usecnv(type="checkbox", name="usecnv", onchange='toggleUseCanvas()')
-			| canvas
+			label.radio.inline
+				input(type="radio", name="optionRadios", id="raw", value="raw", checked="")
+				|raw
+			label.radio.inline
+				input(type="radio", name="optionRadios", id="canvas", value="canvas")
+				|canvas
+			label.radio.inline
+				input(type="radio", name="optionRadios", id="serv", value="served")
+				|served
 			br
 			select#names(size=60, onchange='exploreTile()')
 				each name in names
 					option(value=name)= name
 			p#size
 		img#daimg
+		img#served
 		canvas#cnv(width=1280, height=720)

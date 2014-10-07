@@ -59,6 +59,8 @@ function exploreTile(){
 	var selectedValue = $('#names').val();
 	var imgUrl = '/' + selectedValue;
 	$('#daimg').attr('src', '/' + selectedValue);
+	console.log("Setting flim to jim " + selectedValue);
+	$('#served').attr('src', '/scaled/' + selectedValue);
 
 	var context = $("#cnv")[0].getContext('2d');
 	context.clearRect(0, 0, 1280, 720);
@@ -82,7 +84,20 @@ function exploreTile(){
 	image.src = imgUrl;
 }
 
-function toggleUseCanvas(){
-	$('#daimg').toggle();
-	$('#cnv').toggle();
+function showHideTiles(raw, canvas, served){
+	raw ? $('#daimg').show() : $('#daimg').hide();
+	canvas ? $('#cnv').show() : $('#cnv').hide();
+	served ? $('#served').show() : $('#served').hide();
 }
+
+$(document).ready(function() {
+	$('#raw').click(function(){
+		showHideTiles(true, false, false);
+	});
+	$('#canvas').click(function(){
+		showHideTiles(false, true, false);
+	});
+	$('#serv').click(function(){
+		showHideTiles(false, false, true);
+	});
+});

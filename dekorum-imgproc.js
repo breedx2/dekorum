@@ -20,6 +20,12 @@ function make720p(filename, callback){
 		var png = new PNG({
 			'width': 1280, 'height': 720, filterType: -1
 		});
+		for(var y = 0; y < 720; y++){
+			for(var x = 0; x < 1280; x++){
+				var index = 4 * ((1280 * y) + x);
+				png.data[index+3] = 0;
+			}
+		}
 		for(var y = 0; y < Math.min(720, sourceHeight); y++){
 			for(var x = 0; x < Math.min(1280, sourceWidth); x++){
 				var index = 4 * ((1280 * y) + x);
@@ -30,8 +36,6 @@ function make720p(filename, callback){
 			}
 		}
 		callback(png.pack());
-		//png.pack().pipe(fs.createWriteStream('/tmp/out.png'));
-		//console.log("Written.");
 	});
 }
 

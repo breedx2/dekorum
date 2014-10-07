@@ -23,5 +23,12 @@ body {
 	border: solid silver 1px;
 }
 
+#served {
+	width: 1280px;
+	height: 720px;
+	display: none;
+	border: solid lime 1px;
+}
+
 #size {
 }
