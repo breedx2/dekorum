@@ -11,7 +11,9 @@
         "cheerio": "latest",
         "commander": "latest",
 		"jade": "latest",
+		"ndarray": "latest",
 		"get-pixels": "latest",
-		"pngjs": "latest"
+		"pngjs": "latest",
+		"supervisor": "latest"
     }
 }
