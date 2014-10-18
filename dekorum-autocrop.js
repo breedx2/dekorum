@@ -35,12 +35,30 @@ function findLeftCropRect(pixels, threshold){
 }
 
 function findRightCropRect(pixels, threshold){
-	var x = pixels.shape[0]-1;
+	var x = pixels.shape[0] - 1;
 	var firstPixel = pixels.pick(x, 0);
 	while((x >= 0) && columnUnderThreshold(firstPixel, pixels.pick(x, null, null), threshold)){
 		x--;
 	}
 	return {"width": pixels.shape[0] - 1 - x, "height": pixels.shape[1]};
+}
+
+function findTopCropRect(pixels, threshold){
+	var y = 0;
+	var firstPixel = pixels.pick(0, y);
+	while((y < pixels.shape[1]) && columnUnderThreshold(firstPixel, pixels.pick(null, y, null), threshold)){
+		y++;
+	}
+	return {"width": pixels.shape[0], "height": y};
+}
+
+function findBottomCropRect(pixels, threshold){
+	var y = pixels.shape[1] - 1;
+	var firstPixel = pixels.pick(0, y);
+	while((y >= 0) && columnUnderThreshold(firstPixel, pixels.pick(null, y, null), threshold)){
+		y--;
+	}
+	return {"width": pixels.shape[0], "height": pixels.shape[1] - 1 - y};
 }
 
 function autocropLeft(pixels, threshold){
@@ -51,15 +69,29 @@ function autocropLeft(pixels, threshold){
 
 function autocropRight(pixels, threshold){
 	var rect = findRightCropRect(pixels, threshold);
-	console.log("incoming: " + pixels.shape[0] + " x " + pixels.shape[1]);
 	console.log("right crop rect = " + JSON.stringify(rect));
 	return pixels.hi(pixels.shape[0] - rect.width, pixels.shape[1], pixels.shape[2]);
+}
+
+function autocropTop(pixels, threshold){
+	var rect = findTopCropRect(pixels, threshold);
+	console.log("top crop rect = " + JSON.stringify(rect));
+	return pixels.lo(0, rect.height, 0);
+}
+
+function autocropBottom(pixels, threshold){
+	var rect = findBottomCropRect(pixels, threshold);
+	console.log("bottom crop rect = " + JSON.stringify(rect));
+	return pixels.hi(pixels.shape[0], pixels.shape[1] - rect.height, pixels.shape[2]);
 }
 
 function autocrop(pixels, threshold){
 	console.log("Autocropping image..." + pixels.shape[0] + " x " + pixels.shape[1]);
 	pixels = autocropLeft(pixels, threshold);
-	return autocropRight(pixels, threshold);
+	pixels = autocropRight(pixels, threshold);
+	pixels = autocropTop(pixels, threshold);
+	pixels = autocropBottom(pixels, threshold);
+	return pixels;
 }
 
 module.exports = {
