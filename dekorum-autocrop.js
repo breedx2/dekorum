@@ -40,7 +40,7 @@ function findRightCropRect(pixels, threshold){
 	while((x >= 0) && columnUnderThreshold(firstPixel, pixels.pick(x, null, null), threshold)){
 		x--;
 	}
-	return {"width": x, "height": pixels.shape[1]};
+	return {"width": pixels.shape[0] - 1 - x, "height": pixels.shape[1]};
 }
 
 function autocropLeft(pixels, threshold){
@@ -51,12 +51,13 @@ function autocropLeft(pixels, threshold){
 
 function autocropRight(pixels, threshold){
 	var rect = findRightCropRect(pixels, threshold);
+	console.log("incoming: " + pixels.shape[0] + " x " + pixels.shape[1]);
 	console.log("right crop rect = " + JSON.stringify(rect));
-	return pixels.hi(rect.width, pixels.shape[1], pixels.shape[2]);
+	return pixels.hi(pixels.shape[0] - rect.width, pixels.shape[1], pixels.shape[2]);
 }
 
 function autocrop(pixels, threshold){
-	console.log("Autocropping image...");
+	console.log("Autocropping image..." + pixels.shape[0] + " x " + pixels.shape[1]);
 	pixels = autocropLeft(pixels, threshold);
 	return autocropRight(pixels, threshold);
 }

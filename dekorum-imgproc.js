@@ -15,6 +15,8 @@ function make720p(filename, callback){
 
 		pixels = autocrop.autocrop(pixels, 10);	//consider a more flexible/configurable threshold
 
+		console.log("after autocrop", pixels.shape.slice());
+
 		var sourceWidth = pixels.shape[0];
 		var sourceHeight = pixels.shape[1];
 		var sourceDepth = pixels.shape[2];	//assumed to be 4bpp
@@ -25,16 +27,22 @@ function make720p(filename, callback){
 		for(var y = 0; y < 720; y++){
 			for(var x = 0; x < 1280; x++){
 				var index = 4 * ((1280 * y) + x);
-				png.data[index+3] = 50;
+				png.data[index+0] = 200;
+				png.data[index+1] = 200;
+				png.data[index+2] = 200;
+				png.data[index+3] = 255;
 			}
 		}
-		for(var y = 0; y < Math.min(720, sourceHeight); y++){
-			for(var x = 0; x < Math.min(1280, sourceWidth); x++){
+		var startY = 0;
+		var startX = 0;
+		console.log("blitting " + sourceWidth + " x " + sourceHeight + " to " + startX + "," + startY);
+		for(var y = startY; y < Math.min(720, sourceHeight); y++){
+			for(var x = startX; x < Math.min(1280, sourceWidth); x++){
 				var index = 4 * ((1280 * y) + x);
 				png.data[index + 0] = pixels.get(x, y, 0);
 				png.data[index + 1] = pixels.get(x, y, 1);
 				png.data[index + 2] = pixels.get(x, y, 2);
-				png.data[index + 3] = pixels.get(y, x, 3);
+				png.data[index + 3] = pixels.get(x, y, 3);
 			}
 		}
 		callback(png.pack());
