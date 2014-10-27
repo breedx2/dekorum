@@ -31,7 +31,7 @@ function findLeftCropRect(pixels, threshold){
 	while((x < pixels.shape[0]) && columnUnderThreshold(firstPixel, pixels.pick(x, null, null), threshold)){
 		x++;
 	}
-	return {"width": x, "height": pixels.shape[1]};
+	return {"width": x >= (pixels.shape[0]/2) ? 0 : x, "height": pixels.shape[1]};
 }
 
 function findRightCropRect(pixels, threshold){
@@ -40,7 +40,7 @@ function findRightCropRect(pixels, threshold){
 	while((x >= 0) && columnUnderThreshold(firstPixel, pixels.pick(x, null, null), threshold)){
 		x--;
 	}
-	return {"width": pixels.shape[0] - 1 - x, "height": pixels.shape[1]};
+	return {"width": x <= (pixels.shape[0]/2) ? 0 : pixels.shape[0] - 1 - x, "height": pixels.shape[1]};
 }
 
 function findTopCropRect(pixels, threshold){
@@ -49,7 +49,7 @@ function findTopCropRect(pixels, threshold){
 	while((y < pixels.shape[1]) && columnUnderThreshold(firstPixel, pixels.pick(null, y, null), threshold)){
 		y++;
 	}
-	return {"width": pixels.shape[0], "height": y};
+	return {"width": pixels.shape[0], "height": y >= (pixels.shape[1]/2) ? 0 : y};
 }
 
 function findBottomCropRect(pixels, threshold){
@@ -58,7 +58,7 @@ function findBottomCropRect(pixels, threshold){
 	while((y >= 0) && columnUnderThreshold(firstPixel, pixels.pick(null, y, null), threshold)){
 		y--;
 	}
-	return {"width": pixels.shape[0], "height": pixels.shape[1] - 1 - y};
+	return {"width": pixels.shape[0], "height": y <= (pixels.shape[1]/2) ? 0 : pixels.shape[1] - 1 - y};
 }
 
 function autocropLeft(pixels, threshold){

@@ -74,12 +74,13 @@ function exploreTile(){
 		}
 		var imageData = context.getImageData(0, 0, Math.min(1280, image.width), Math.min(720, image.height));
 		var leftRect = findLeftCropRect(imageData, 10);
-		context.strokeStyle = 'pink';
+		/*context.strokeStyle = 'pink';
 		console.log("Left rect = " + JSON.stringify(leftRect));
 		if(leftRect.width > 0){
 			context.rect(0, 0, leftRect.width, leftRect.height);
 			context.stroke();
 		}
+		*/
 	};
 	image.src = imgUrl;
 }

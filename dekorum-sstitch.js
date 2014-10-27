@@ -20,14 +20,14 @@ function findLowestDeltaSeam(col1, col2){
 	var resultIndex = -1;
 	for(var i=0; i < col1.shape[0]; i++){
 		var delta = colDelta(col1, col2, i);
-		console.log("Col delta (" + i + "): " + delta);
+		//console.log("Col delta (" + i + "): " + delta);
 		if(delta < result){
 			result = delta;
 			resultIndex = i;
 		}
 	}
 	console.log("LOWEST is " + result + " at index " + resultIndex);
-	return result;
+	return [resultIndex, result]
 }
 
 function sstitch(pixels){
@@ -36,8 +36,7 @@ function sstitch(pixels){
 	var leftCol = pixels.pick(0, null, null);
 	console.log("DEBUG rightcol: " + rightCol.shape[0] + " by " + rightCol.shape[1]);
 	console.log("DEBUG leftcol: " + leftCol.shape[0] + " by " + leftCol.shape[1]);
-	findLowestDeltaSeam(rightCol, leftCol);
-	return pixels;
+	return findLowestDeltaSeam(rightCol, leftCol);
 }
 
 module.exports = {

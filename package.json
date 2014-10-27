@@ -12,6 +12,7 @@
         "commander": "latest",
 		"jade": "latest",
 		"ndarray": "latest",
+		//"phase-align": "latest",
 		"get-pixels": "latest",
 		"pngjs": "latest",
 		"supervisor": "latest"
