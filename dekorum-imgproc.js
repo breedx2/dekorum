@@ -60,12 +60,17 @@ function make720p(filename, callback){
 		var width = Math.min(1280 - tx, sourceWidth); 
 		while(tx < 1280){
 			var ty = 0;
+
+			var col = tx / sourceWidth;
+			var thisOffset = (col == 0) ? 0 : (col * offset[0]) % sourceHeight;
+			console.log("I think offset for col " + col + " should be " + thisOffset);
+
 			while(ty < 720){
 				var startY = 0;
 				var height = sourceHeight;
 				if((tx > 0) && (ty == 0)){
-					height = sourceHeight - offset[0];
-					startY = offset[0];
+					height = sourceHeight - thisOffset;
+					startY = thisOffset;
 				}
 				if(ty + height > 720){
 					height = 720 - ty;
