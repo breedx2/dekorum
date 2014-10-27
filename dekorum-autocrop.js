@@ -53,12 +53,12 @@ function findTopCropRect(pixels, threshold){
 }
 
 function findBottomCropRect(pixels, threshold){
-	var y = pixels.shape[1] - 1;
+	var y = pixels.shape[1];
 	var firstPixel = pixels.pick(0, y);
 	while((y >= 0) && columnUnderThreshold(firstPixel, pixels.pick(null, y, null), threshold)){
 		y--;
 	}
-	return {"width": pixels.shape[0], "height": y <= (pixels.shape[1]/2) ? 0 : pixels.shape[1] - 1 - y};
+	return {"width": pixels.shape[0], "height": y <= (pixels.shape[1]/2) ? 0 : pixels.shape[1] - y};
 }
 
 function autocropLeft(pixels, threshold){
