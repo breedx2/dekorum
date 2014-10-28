@@ -43,7 +43,7 @@ function make720p(filename, callback){
 		}
 		console.log("got pixels", pixels.shape.slice());
 
-		pixels = autocrop.autocrop(pixels, 10);	//consider a more flexible/configurable/dynamic threshold
+		pixels = autocrop.autocrop(pixels, 15);	//consider a more flexible/configurable/dynamic threshold
 		console.log("after autocrop", pixels.shape.slice());
 
 		offset = sstitch.sstitch(pixels);
@@ -63,7 +63,6 @@ function make720p(filename, callback){
 
 			var col = tx / sourceWidth;
 			var thisOffset = (col == 0) ? 0 : (col * offset[0]) % sourceHeight;
-			console.log("I think offset for col " + col + " should be " + thisOffset);
 
 			while(ty < 720){
 				var startY = 0;

@@ -1,4 +1,6 @@
 
+var AUTOCROP_WHITE_DELTA_MIN = 9;
+
 function componentUnderThreshold(x, xPrime, threshold){
 	if(x == xPrime){
 		return true;
@@ -7,6 +9,14 @@ function componentUnderThreshold(x, xPrime, threshold){
 	var den = Math.max(x, xPrime);
 	var percent = Math.abs(num / den);
 	return percent <= threshold;
+}
+
+function rgbDelta(p1, p2){
+	return Math.abs(p1[0]-p2[0]) + Math.abs(p1[1]-p2[1]) + Math.abs(p1[2]-p2[2]);
+}
+
+function distFromWhite(pixel){
+	return rgbDelta([pixel.get(0),pixel.get(1),pixel.get(2)], [255,255,255] );
 }
 
 function rgbUnderThreshold(reference, pixel, threshold){
@@ -28,7 +38,9 @@ function columnUnderThreshold(reference, colPixels, threshold){
 function findLeftCropRect(pixels, threshold){
 	var x = 0;
 	var firstPixel = pixels.pick(x,0);
-	while((x < pixels.shape[0]) && columnUnderThreshold(firstPixel, pixels.pick(x, null, null), threshold)){
+	while((distFromWhite(firstPixel) < AUTOCROP_WHITE_DELTA_MIN) && 
+		  (x < pixels.shape[0]) && 
+		  columnUnderThreshold(firstPixel, pixels.pick(x, null, null), threshold)){
 		x++;
 	}
 	return {"width": x >= (pixels.shape[0]/2) ? 0 : x, "height": pixels.shape[1]};
@@ -37,7 +49,9 @@ function findLeftCropRect(pixels, threshold){
 function findRightCropRect(pixels, threshold){
 	var x = pixels.shape[0] - 1;
 	var firstPixel = pixels.pick(x, 0);
-	while((x >= 0) && columnUnderThreshold(firstPixel, pixels.pick(x, null, null), threshold)){
+	while((distFromWhite(firstPixel) < AUTOCROP_WHITE_DELTA_MIN) && 
+		  (x >= 0) && 
+		  columnUnderThreshold(firstPixel, pixels.pick(x, null, null), threshold)){
 		x--;
 	}
 	return {"width": x <= (pixels.shape[0]/2) ? 0 : pixels.shape[0] - 1 - x, "height": pixels.shape[1]};
@@ -46,16 +60,18 @@ function findRightCropRect(pixels, threshold){
 function findTopCropRect(pixels, threshold){
 	var y = 0;
 	var firstPixel = pixels.pick(0, y);
-	while((y < pixels.shape[1]) && columnUnderThreshold(firstPixel, pixels.pick(null, y, null), threshold)){
+	while((distFromWhite(firstPixel) < AUTOCROP_WHITE_DELTA_MIN) && 
+	      (y < pixels.shape[1]) && columnUnderThreshold(firstPixel, pixels.pick(null, y, null), threshold)){
 		y++;
 	}
-	return {"width": pixels.shape[0], "height": y >= (pixels.shape[1]/2) ? 0 : y};
+	return {"width": pixels.shape[0], "height": y >= (pixels.shape[1]/2) ? 0 : y+1};
 }
 
 function findBottomCropRect(pixels, threshold){
-	var y = pixels.shape[1];
+	var y = pixels.shape[1]-1;
 	var firstPixel = pixels.pick(0, y);
-	while((y >= 0) && columnUnderThreshold(firstPixel, pixels.pick(null, y, null), threshold)){
+	while((distFromWhite(firstPixel) < AUTOCROP_WHITE_DELTA_MIN) && 
+	      (y >= 0) && columnUnderThreshold(firstPixel, pixels.pick(null, y, null), threshold)){
 		y--;
 	}
 	return {"width": pixels.shape[0], "height": y <= (pixels.shape[1]/2) ? 0 : pixels.shape[1] - y};
