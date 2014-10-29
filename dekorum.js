@@ -37,7 +37,7 @@ else if(program.explore){
 	console.log("Initiating explorer mode..");
 	explore.explore(program.explore);
 }
-else if(program.frame){
+else if(program.frames){
     if(!program.indir){
         console.log("--indir is required for frame mode.");
         return;

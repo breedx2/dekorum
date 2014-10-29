@@ -21,7 +21,7 @@ function explore(dir){
 
 	app.get('/scaled/:filename', function(req, res){
 		var filename = dir + '/' + req.params.filename;
-		imgproc.make720p(filename, function(png){
+		imgproc.make720p(filename, function(err, png){
 			res.writeHead(200, {
 		    	'Content-Type': "image/png", 
 				//'Content-Length': stat.size,

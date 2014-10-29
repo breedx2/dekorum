@@ -39,6 +39,7 @@ function make720p(filename, callback){
 	getpixels(filename, 'image/jpeg', function(err, pixels){
 		if(err){
 			console.log("Error loading " + filename + ": " + err);
+			callback(err, null);
 			return;
 		}
 		console.log("got pixels", pixels.shape.slice());
@@ -82,7 +83,7 @@ function make720p(filename, callback){
 			}
 			tx += sourceWidth;
 		}
-		callback(png.pack());
+		callback(null, png.pack());
 	});
 }
 
