@@ -12,9 +12,9 @@
         "commander": "latest",
 		"jade": "latest",
 		"ndarray": "latest",
-		//"phase-align": "latest",
 		"get-pixels": "latest",
 		"pngjs": "latest",
-		"supervisor": "latest"
+		"supervisor": "latest",
+		"aws-sdk": "latest"
     }
 }

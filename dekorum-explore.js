@@ -14,9 +14,10 @@ function explore(dir){
 	app.engine('jade', require('jade').__express);
 	app.use(express.static('static'));
 	app.use(express.static(dir));
-	var filenames = dfs.loadFilenames(dir);
-	app.get('/', function(req, res){
-		res.render('explore.jade', { names: filenames });
+	dfs.loadFilenames(dir, function(err, files){
+		app.get('/', function(req, res){
+			res.render('explore.jade', { names: files});
+		});
 	});
 
 	app.get('/scaled/:filename', function(req, res){
