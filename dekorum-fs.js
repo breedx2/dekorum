@@ -5,6 +5,7 @@ exports = module.exports
 
 module.exports = {
    	loadFilenames: loadFilenames,
+   	exists: exists,
 };
 
 function is_s3(dir){
@@ -13,6 +14,20 @@ function is_s3(dir){
 
 function s3BucketFromUri(uri){
 	return uri.replace(/^s3:../, '').replace(/\/.*/, '')
+}
+
+function s3Exists(file, callback){
+	//TODO: build me...
+	callback(true);
+}
+
+function exists(file, callback){
+	if(is_s3(file)){
+		s3Exists(file, callback);
+	}
+	else {
+		fs.exists(file, callback);
+	}
 }
 
 function loadFilenames(dir, callback){
@@ -40,7 +55,7 @@ function loadFilenamesS3(dir, callback){
 	var bucket = s3BucketFromUri(dir);
 	aws.config.loadFromPath('./aws_dekorum_creds.json');	// todo: don't rely on cwd
 	var s3 = new aws.S3();
-	console.log("Checking out bucket " + bucket);
+	console.log("Loading files from s3 bucket " + bucket);
 	var cb = function(err, data){
 		files = data.Contents
 				.map(function(x) { return x.Key; })

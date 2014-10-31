@@ -17,20 +17,22 @@ function frame(indir, outdir){
 				return;
 			}
 			var outfile = outdir + "/" + path.basename(filename) + ".png";
-			if(fs.existsSync(outfile)){
-				console.log("Skipping " + filename + " (exists)");
-				return convert(filenames.shift(), filenames);
-			}
-			imgproc.make720p(filename, function(err, png){
-				if(err){
+			dfs.exists(outfile, function(exists){
+				if(exists){
+					console.log("Skipping " + filename + " (exists)");
 					return convert(filenames.shift(), filenames);
 				}
-				console.log("Writing outfile: " + outfile);
-				var outstream = fs.createWriteStream(outfile);
-				png.on('end', function(){
-					convert(filenames.shift(), filenames);
+				imgproc.make720p(filename, function(err, png){
+					if(err){
+						return convert(filenames.shift(), filenames);
+					}
+					console.log("Writing outfile: " + outfile);
+					var outstream = fs.createWriteStream(outfile);
+					png.on('end', function(){
+						convert(filenames.shift(), filenames);
+					});
+					png.pipe(outstream);
 				});
-				png.pipe(outstream);
 			});
 		}
 
