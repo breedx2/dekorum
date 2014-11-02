@@ -16,6 +16,14 @@ function s3BucketFromUri(uri){
 	return uri.replace(/^s3:../, '').replace(/\/.*/, '')
 }
 
+function s3PrefixFromUri(uri){
+	var result = uri.slice("s3://".length + s3BucketFromUri(uri).length);
+	if(result[0] == '/'){
+		return result.slice(1);
+	}
+	return result;
+}
+
 function s3Exists(file, callback){
 	//TODO: build me...
 	callback(true);
@@ -50,21 +58,28 @@ function loadFilenames(dir, callback){
 	return result;
 }
 
-function loadFilenamesS3(dir, callback){
+function loadFilenamesS3(dir, callback, markerKey){
 	var aws = require('aws-sdk'); 
-	var bucket = s3BucketFromUri(dir);
 	aws.config.loadFromPath('./aws_dekorum_creds.json');	// todo: don't rely on cwd
 	var s3 = new aws.S3();
-	console.log("Loading files from s3 bucket " + bucket);
-	var cb = function(err, data){
-		files = data.Contents
-				.map(function(x) { return x.Key; })
-				.filter(function(x){ return x.match(/^img\/\w/); })
-				.map(function(x) { return "s3://" + bucket + "/" + x; });
-		callback(err, files);
+	var bucket = s3BucketFromUri(dir);
+	console.log("Loading files from s3 bucket " + bucket + " (at marker = " + markerKey + ")");
+	var params = { Bucket: bucket }
+	if(markerKey){
+		params['Marker'] = markerKey;
 	}
-	// TODO: Fetch all (api limits to 1000, need to keep fetching...)
-	s3.listObjects({ Bucket: bucket}, cb);
+	s3.listObjects(params, function(err, data){
+		var files = data.Contents
+				.map(function(x) { return x.Key; })
+				.filter(function(x){ return x.match(/^img\/\w/); });
+		var cbfiles = files.map(function(x) { return "s3://" + bucket + "/" + x; });
+		callback(err, cbfiles);
+		if(data.IsTruncated){
+			var markerKey = files[files.length-1];
+			console.log("S3 paging forward from " + markerKey);
+			loadFilenamesS3(dir, callback, markerKey);
+		}
+	});
 }
 
 function loadFilenamesFs(dir, callback){
