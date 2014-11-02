@@ -12,7 +12,7 @@ module.exports = {
 // TODO: Force/overwrite param
 function frame(indir, outdir){
 	dfs.loadFilenames(indir, function(err, filenames){
-		function convert(filename){
+		var convert = function(filename){
 			if(!filename){
 				return;
 			}

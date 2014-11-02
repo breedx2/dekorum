@@ -5,6 +5,7 @@ exports = module.exports
 
 module.exports = {
    	loadFilenames: loadFilenames,
+	loadFile: loadFile,
    	exists: exists,
 };
 
@@ -90,4 +91,25 @@ function loadFilenamesFs(dir, callback){
 		}
 		callback(err, filenames.map(function(x){ return dir + "/" + x;} ));
 	});
+}
+
+function loadFileFromS3(file, callback){
+	var aws = require('aws-sdk'); 
+	aws.config.loadFromPath('./aws_dekorum_creds.json');	// todo: don't rely on cwd
+	var s3 = new aws.S3();
+	var bucket = s3BucketFromUri(file);
+	var key = s3PrefixFromUri(file);
+	var params = { Bucket: bucket, Key: key};
+	s3.getObject(params, function(err, data){
+		callback(err, data.Body);
+	});
+}
+
+function loadFile(file, callback){
+	if(is_s3(file)){
+		loadFileFromS3(file, callback);
+	}
+	else{
+		fs.readFile(file, callback);
+	}
 }
