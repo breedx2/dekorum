@@ -16,6 +16,7 @@ function explore(dir){
 	app.use(express.static(dir));
 	dfs.loadFilenames(dir, function(err, files){
 		app.get('/', function(req, res){
+			files = files.map(function(f){ return path.basename(f); });
 			res.render('explore.jade', { names: files});
 		});
 	});
