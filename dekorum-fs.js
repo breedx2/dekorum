@@ -4,6 +4,7 @@ var fs = require('fs');
 exports = module.exports
 
 module.exports = {
+   	loadFilteredFilenames: loadFilteredFilenames,
    	loadFilenames: loadFilenames,
 	loadFile: loadFile,
    	exists: exists,
@@ -37,6 +38,21 @@ function exists(file, callback){
 	else {
 		fs.exists(file, callback);
 	}
+}
+
+var FILTER_PREFIX = "437-";
+function loadFilteredFilenames(dir, callback){
+	return loadFilenames(dir, function(err, files){
+		var cbfiles = files;
+		if(!err){
+			console.log("Filtering files to remove prefix " + FILTER_PREFIX);
+			cbfiles = files.filter(function(f){ 
+				return path.basename(f).indexOf(FILTER_PREFIX) != 0;
+			});
+			console.log(cbfiles.length + " files are remaining.");
+		}
+		callback(err, cbfiles);
+	});
 }
 
 function loadFilenames(dir, callback){

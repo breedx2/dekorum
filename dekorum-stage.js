@@ -5,7 +5,7 @@ path = require('path');
 dfs = require('./dekorum-fs');
 
 function stage(indir, outdir, mode, framect){
-	dfs.loadFilenames(indir, function(err, filenames){
+	dfs.loadFilteredFilenames(indir, function(err, filenames){
 		if(mode == "rand"){
 			stageRandom(filenames, outdir, framect);
 		}
