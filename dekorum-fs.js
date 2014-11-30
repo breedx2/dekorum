@@ -1,5 +1,5 @@
-
 var fs = require('fs');
+var mime = require('mime');
 
 exports = module.exports
 
@@ -7,6 +7,7 @@ module.exports = {
    	loadFilteredFilenames: loadFilteredFilenames,
    	loadFilenames: loadFilenames,
 	loadFile: loadFile,
+	writeFile: writeFile,
    	exists: exists,
 };
 
@@ -28,7 +29,14 @@ function s3PrefixFromUri(uri){
 
 function s3Exists(file, callback){
 	//TODO: build me...
-	callback(true);
+	console.log("Checking to seee if " + file + " exists in s3...");
+	var s3 = buildS3();
+	var bucket = s3BucketFromUri(file);
+	var key = s3PrefixFromUri(file);
+	var params = { Bucket: bucket, Key: key };
+	s3.headObject(params, function(err, data){
+		callback(err ? false : true);
+	});
 }
 
 function exists(file, callback){
@@ -75,13 +83,17 @@ function loadFilenames(dir, callback){
 	return result;
 }
 
-function loadFilenamesS3(dir, callback, markerKey){
+function buildS3(){
 	var aws = require('aws-sdk'); 
 	aws.config.loadFromPath('./aws_dekorum_creds.json');	// todo: don't rely on cwd
-	var s3 = new aws.S3();
+	return new aws.S3();
+}
+
+function loadFilenamesS3(dir, callback, markerKey){
+	var s3 = buildS3();
 	var bucket = s3BucketFromUri(dir);
 	console.log("Loading files from s3 bucket " + bucket + " (at marker = " + markerKey + ")");
-	var params = { Bucket: bucket }
+	var params = { Bucket: bucket };
 	if(markerKey){
 		params['Marker'] = markerKey;
 	}
@@ -110,9 +122,7 @@ function loadFilenamesFs(dir, callback){
 }
 
 function loadFileFromS3(file, callback){
-	var aws = require('aws-sdk'); 
-	aws.config.loadFromPath('./aws_dekorum_creds.json');	// todo: don't rely on cwd
-	var s3 = new aws.S3();
+	var s3 = buildS3();
 	var bucket = s3BucketFromUri(file);
 	var key = s3PrefixFromUri(file);
 	var params = { Bucket: bucket, Key: key};
@@ -127,5 +137,35 @@ function loadFile(file, callback){
 	}
 	else{
 		fs.readFile(file, callback);
+	}
+}
+
+function s3WriteFile(instream, file, callback){
+	console.log("Writing to s3 " + file);
+	// Note: aws requires a known content length, so we have to buffer in mem first.  Bummer.
+	var buf = new Buffer(0);
+	instream.on('data', function(data){
+		buf = Buffer.concat([buf, data]);
+	});
+	instream.on('end', function(){
+		var s3 = buildS3();
+		var bucket = s3BucketFromUri(file);
+		var key = s3PrefixFromUri(file);
+		var params = { Bucket: bucket, Key: key, Body: buf, ContentLength: buf.length, ContentType: mime.lookup(file) };
+		s3.putObject(params, callback);
+	});
+}
+
+function writeFile(instream, file, callback){
+	if(is_s3(file)){
+		s3WriteFile(instream, file, callback);
+	}
+	else {
+		var outstream = fs.createWriteStream(file);
+		instream.on('end', function(){
+			console.log("DEBUG: GOT END OF PNG...");
+			callback(null, 'success');
+		});
+		instream.pipe(outstream);
 	}
 }

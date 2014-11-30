@@ -27,11 +27,14 @@ function frame(indir, outdir){
 						return convert(filenames.shift(), filenames);
 					}
 					console.log("Writing outfile: " + outfile);
-					var outstream = fs.createWriteStream(outfile);
-					png.on('end', function(){
+					dfs.writeFile(png, outfile, function(err, data){
+						if(err){
+							console.log("Error writing file: " + err);
+							return;
+						}
+						console.log("Done writing file: " + outfile);
 						convert(filenames.shift(), filenames);
 					});
-					png.pipe(outstream);
 				});
 			});
 		}

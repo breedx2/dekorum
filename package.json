@@ -7,6 +7,7 @@
     "dependencies": {
         "express": "latest",
         "request": "latest",
+		"mime": "latest",
         "tough-cookie": "latest",
         "cheerio": "latest",
         "commander": "latest",
