@@ -16,6 +16,7 @@
 		"get-pixels": "latest",
 		"pngjs": "latest",
 		"supervisor": "latest",
-		"aws-sdk": "latest"
+		"aws-sdk": "latest",
+		"async": "latest"
     }
 }

@@ -1,5 +1,6 @@
 var fs = require('fs');
 var mime = require('mime');
+var async = require('async');
 
 exports = module.exports
 
@@ -102,12 +103,16 @@ function loadFilenamesS3(dir, callback, markerKey){
 				.map(function(x) { return x.Key; })
 				.filter(function(x){ return x.match(/^img\/\w/); });
 		var cbfiles = files.map(function(x) { return "s3://" + bucket + "/" + x; });
-		callback(err, cbfiles);
-		if(data.IsTruncated){
-			var markerKey = files[files.length-1];
-			console.log("S3 paging forward from " + markerKey);
-			loadFilenamesS3(dir, callback, markerKey);
-		}
+		async.series([
+			function(){ callback(err, cbfiles); },
+			function(){
+				if(data.IsTruncated){
+					var markerKey = files[files.length-1];
+					console.log("S3 paging forward from " + markerKey);
+					loadFilenamesS3(dir, callback, markerKey);
+				}
+			}
+		]);
 	});
 }
 

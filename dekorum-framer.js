@@ -39,6 +39,7 @@ function frame(indir, outdir){
 			});
 		}
 
+		// TODO: Consider adding concurrency here -- like async.eachLimit
 		convert(filenames.shift(), filenames);
 	});
 }
