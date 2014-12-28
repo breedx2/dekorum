@@ -132,6 +132,10 @@ function loadFileFromS3(file, callback){
 	var key = s3PrefixFromUri(file);
 	var params = { Bucket: bucket, Key: key};
 	s3.getObject(params, function(err, data){
+		if(err){
+			console.log("Error loading from " + file + ": " + err);
+			return callback(err, null);
+		}
 		callback(err, data.Body);
 	});
 }
