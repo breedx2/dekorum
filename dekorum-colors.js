@@ -1,6 +1,5 @@
 var thief = require('thief');
 var Canvas = thief.Canvas;
-//var toArray = require('stream-to-array');
 
 exports = module.exports
 
@@ -20,15 +19,4 @@ function getPalette(pngBuffer, width, height) {
 	ctx.drawImage(img, 0, 0, width, height);
 	var palette = thief.createPalette(img, 5);
 	return palette;
-
-/*
-	toArray(png, function(err, arr){
-		var buff = Buffer.concat(arr);
-		console.log("ARRAY COMPLETE!");
-		img.src = buff;
-		ctx.drawImage(img, 0, 0, png.width, png.height);
-		var palette = thief.createPalette(img, 5);
-		callback(null, palette);
-	});
-	*/
 }
