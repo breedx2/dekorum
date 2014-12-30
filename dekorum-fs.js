@@ -10,6 +10,7 @@ module.exports = {
 	loadFile: loadFile,
 	writeFile: writeFile,
    	exists: exists,
+	is_s3: is_s3,
 };
 
 function is_s3(dir){

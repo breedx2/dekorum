@@ -14,7 +14,20 @@ function explore(dir){
 	var app = express();
 	app.engine('jade', require('jade').__express);
 	app.use(express.static('static'));
-	app.use(express.static(dir));
+	console.log("DEBUG: dir = " + dir);
+	if(dfs.is_s3(dir)){
+		app.get("/:filename", function(req, res){
+			console.log("Got it!");
+			dfs.loadFile(dir + '/' + req.params.filename, function(err, data){
+				console.log("LOADED!" + data.length);
+				res.setHeader("Content-type", "image/jpg");
+				res.send(data);
+			});
+		});
+	}
+	else {
+		app.use(express.static(dir));
+	}
 	dfs.loadFilenames(dir, function(err, files){
 		app.get('/', function(req, res){
 			files = files.map(function(f){ return path.basename(f); });
@@ -33,7 +46,7 @@ function explore(dir){
 			});
 			png.on('end', function(){
 				var palette = colors.getPalette(pngBuffer, png.width, png.height);
-				console.log("YAY!!!!!!!!!!!!");
+				console.log("Color palette calculated: ");
 				console.log(palette);
 			});
 
