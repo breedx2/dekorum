@@ -17,6 +17,9 @@
 		"pngjs": "latest",
 		"supervisor": "latest",
 		"aws-sdk": "latest",
-		"async": "latest"
+		"async": "latest",
+		"canvas": "latest",
+		"thief": "latest",
+		"stream-to-array": "latest"
     }
 }
