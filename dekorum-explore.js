@@ -3,6 +3,7 @@ var fs = require('fs');
 var imgproc = require('./dekorum-imgproc');
 var dfs = require('./dekorum-fs');
 var colors = require('./dekorum-colors');
+var entropy = require('./dekorum-entropy');
 
 exports = module.exports
 
@@ -42,6 +43,7 @@ function getScaledImage(dir){
 				console.log("Color palette calculated: ");
 				console.log(palette);
 				palettes[req.params.filename] = palette;
+				var imageEntropy = entropy.entropy(png.data);
 			});
 
 			res.writeHead(200, {
