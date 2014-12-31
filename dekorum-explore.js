@@ -19,7 +19,6 @@ function explore(dir){
 		app.get("/:filename", function(req, res){
 			console.log("Got it!");
 			dfs.loadFile(dir + '/' + req.params.filename, function(err, data){
-				console.log("LOADED!" + data.length);
 				res.setHeader("Content-type", "image/jpg");
 				res.send(data);
 			});

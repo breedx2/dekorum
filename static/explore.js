@@ -58,8 +58,10 @@ function findLeftCropRect(imageData, threshold){
 function exploreTile(){
 	var selectedValue = $('#names').val();
 	var imgUrl = '/' + selectedValue;
+	$('#throbber').show();
 	$('#daimg').attr('src', '/' + selectedValue);
 	console.log("Setting flim to jim " + selectedValue);
+	$('#served').one('load', function(){ $('#throbber').hide();});
 	$('#served').attr('src', '/scaled/' + selectedValue);
 
 	var context = $("#cnv")[0].getContext('2d');
@@ -74,6 +76,7 @@ function exploreTile(){
 		}
 		var imageData = context.getImageData(0, 0, Math.min(1280, image.width), Math.min(720, image.height));
 		var leftRect = findLeftCropRect(imageData, 10);
+
 		/*context.strokeStyle = 'pink';
 		console.log("Left rect = " + JSON.stringify(leftRect));
 		if(leftRect.width > 0){
