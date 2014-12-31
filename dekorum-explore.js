@@ -10,6 +10,8 @@ module.exports = {
     explore: explore,
 };
 
+var palettes = {};
+
 function explore(dir){
 	var app = express();
 	app.engine('jade', require('jade').__express);
@@ -34,6 +36,11 @@ function explore(dir){
 		});
 	});
 
+	app.get('/palette/:filename', function(req, res){
+		var filename = req.params.filename;
+		res.json(palettes[filename]);
+	});
+
 	app.get('/scaled/:filename', function(req, res){
 		var filename = dir + '/' + req.params.filename;
 		imgproc.make720p(filename, function(err, png){
@@ -47,6 +54,7 @@ function explore(dir){
 				var palette = colors.getPalette(pngBuffer, png.width, png.height);
 				console.log("Color palette calculated: ");
 				console.log(palette);
+				palettes[req.params.filename] = palette;
 			});
 
 			res.writeHead(200, {

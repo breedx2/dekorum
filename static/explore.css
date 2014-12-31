@@ -45,3 +45,22 @@ body {
 	left: 360px;
 	top: 15px;
 }
+
+#palette {
+	position: fixed;
+	left: 420px;
+	top: 15px;
+	height: 40px;
+	width: 430px;
+	border: solid silver 1px;
+	padding: 5px;
+	display: none;
+}
+
+.pcolor {
+	border: solid black 1px;
+	height: 30px;
+	width: 80px;
+	display: inline-block;
+	margin: 2px;
+}

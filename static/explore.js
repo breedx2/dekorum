@@ -55,13 +55,36 @@ function findLeftCropRect(imageData, threshold){
 	return {"width": x, "height": imageData.height};
 }
 
+function updatePalette(filename){
+	var url = '/palette/' + filename;
+	$.ajax({
+		url: url,
+	}).done(function(data){
+		console.log("palette data => " + data[0]);
+		var rgb = function(p){
+			return "rgb(" + p[0] + "," + p[1] + "," + p[2] + ")";
+		}
+
+		$('#pcolor1').css('background-color', rgb(data[0]));
+		$('#pcolor2').css('background-color', rgb(data[1]));
+		$('#pcolor3').css('background-color', rgb(data[2]));
+		$('#pcolor4').css('background-color', rgb(data[3]));
+		$('#pcolor5').css('background-color', rgb(data[4]));
+		$('#palette').show();
+	});
+}
+
 function exploreTile(){
 	var selectedValue = $('#names').val();
 	var imgUrl = '/' + selectedValue;
 	$('#throbber').show();
+	$('#palette').hide();
 	$('#daimg').attr('src', '/' + selectedValue);
 	console.log("Setting flim to jim " + selectedValue);
-	$('#served').one('load', function(){ $('#throbber').hide();});
+	$('#served').one('load', function(){ 
+		$('#throbber').hide();
+		updatePalette(selectedValue);
+	});
 	$('#served').attr('src', '/scaled/' + selectedValue);
 
 	var context = $("#cnv")[0].getContext('2d');
