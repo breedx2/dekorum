@@ -12,36 +12,23 @@ module.exports = {
 
 var palettes = {};
 
-function explore(dir){
-	var app = express();
-	app.engine('jade', require('jade').__express);
-	app.use(express.static('static'));
-	console.log("DEBUG: dir = " + dir);
-	if(dfs.is_s3(dir)){
-		app.get("/:filename", function(req, res){
-			console.log("Got it!");
-			dfs.loadFile(dir + '/' + req.params.filename, function(err, data){
-				res.setHeader("Content-type", "image/jpg");
-				res.send(data);
-			});
+function serveFileFromS3(dir){
+	return function(req, res){
+		console.log("Got it!");
+		dfs.loadFile(dir + '/' + req.params.filename, function(err, data){
+			res.setHeader("Content-type", "image/jpg");
+			res.send(data);
 		});
 	}
-	else {
-		app.use(express.static(dir));
-	}
-	dfs.loadFilenames(dir, function(err, files){
-		app.get('/', function(req, res){
-			files = files.map(function(f){ return path.basename(f); });
-			res.render('explore.jade', { names: files});
-		});
-	});
+}
 
-	app.get('/palette/:filename', function(req, res){
-		var filename = req.params.filename;
-		res.json(palettes[filename]);
-	});
+function getPalette(req, res){
+	var filename = req.params.filename;
+	res.json(palettes[filename]);
+}
 
-	app.get('/scaled/:filename', function(req, res){
+function getScaledImage(dir){
+	return function(req, res){
 		var filename = dir + '/' + req.params.filename;
 		imgproc.make720p(filename, function(err, png){
 
@@ -58,13 +45,36 @@ function explore(dir){
 			});
 
 			res.writeHead(200, {
-		    	'Content-Type': "image/png", 
+				'Content-Type': "image/png", 
 				//'Content-Length': stat.size,
 				//'Last-Modified': stat.mtime
 			});
 			png.pipe(res);
 		});
+	}
+}
+
+function explore(dir){
+	var app = express();
+	app.engine('jade', require('jade').__express);
+	app.use(express.static('static'));
+	console.log("DEBUG: dir = " + dir);
+	if(dfs.is_s3(dir)){
+		app.get("/:filename", serveFileFromS3(dir));
+	}
+	else {
+		app.use(express.static(dir));
+	}
+	dfs.loadFilenames(dir, function(err, files){
+		app.get('/', function(req, res){
+			files = files.map(function(f){ return path.basename(f); });
+			res.render('explore.jade', { names: files});
+		});
 	});
+
+	app.get('/palette/:filename', getPalette);
+
+	app.get('/scaled/:filename', getScaledImage(dir));
 
 	var server = app.listen(8155, function() {
 		console.log('Listening on port %d', server.address().port);
