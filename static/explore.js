@@ -74,16 +74,28 @@ function updatePalette(filename){
 	});
 }
 
+function updateEntropy(filename){
+	var url = '/entropy/' + filename;
+	$.ajax({
+		url: url,
+	}).done(function(data){
+		$('#entropy').text("Entropy: " + data.entropy.toFixed(3));
+		$('#entropy').show();
+	});
+}
+
 function exploreTile(){
 	var selectedValue = $('#names').val();
 	var imgUrl = '/' + selectedValue;
 	$('#throbber').show();
 	$('#palette').hide();
+	$('#entropy').hide();
 	$('#daimg').attr('src', '/' + selectedValue);
 	console.log("Setting flim to jim " + selectedValue);
 	$('#served').one('load', function(){ 
 		$('#throbber').hide();
 		updatePalette(selectedValue);
+		updateEntropy(selectedValue);
 	});
 	$('#served').attr('src', '/scaled/' + selectedValue);
 

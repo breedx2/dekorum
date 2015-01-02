@@ -43,9 +43,9 @@ function entropy(pixelData){
 	var hist = histogram(pixelData);
 	var histlen = Object.keys(hist).length;
 	console.log("Got histogram of length " + histlen);
-	console.log(hist);
+	//console.log(hist);
 	var probs = probabilities(hist, pixelData.length / 4.0);
-	console.log(probs);
+	//console.log(probs);
 
 	var result = 0;
 	probs.forEach(function(v){

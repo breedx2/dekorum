@@ -12,6 +12,7 @@ module.exports = {
 };
 
 var palettes = {};
+var entropies = {};
 
 function serveFileFromS3(dir){
 	return function(req, res){
@@ -26,6 +27,11 @@ function serveFileFromS3(dir){
 function getPalette(req, res){
 	var filename = req.params.filename;
 	res.json(palettes[filename]);
+}
+
+function getEntropy(req, res){
+	var filename = req.params.filename;
+	res.json( { entropy: entropies[filename]});
 }
 
 function getScaledImage(dir){
@@ -44,6 +50,7 @@ function getScaledImage(dir){
 				console.log(palette);
 				palettes[req.params.filename] = palette;
 				var imageEntropy = entropy.entropy(png.data);
+				entropies[req.params.filename] = imageEntropy;
 			});
 
 			res.writeHead(200, {
@@ -75,6 +82,7 @@ function explore(dir){
 	});
 
 	app.get('/palette/:filename', getPalette);
+	app.get('/entropy/:filename', getEntropy);
 
 	app.get('/scaled/:filename', getScaledImage(dir));
 

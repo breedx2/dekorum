@@ -64,3 +64,10 @@ body {
 	display: inline-block;
 	margin: 2px;
 }
+
+#entropy {
+	position: fixed;
+	left: 890px;
+	font-size: 18px;
+	top: 30px;
+}
