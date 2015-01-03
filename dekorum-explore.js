@@ -11,6 +11,7 @@ module.exports = {
     explore: explore,
 };
 
+var filenames = [];
 var palettes = {};
 var entropies = {};
 
@@ -75,10 +76,14 @@ function explore(dir){
 		app.use(express.static(dir));
 	}
 	dfs.loadFilenames(dir, function(err, files){
-		app.get('/', function(req, res){
-			files = files.map(function(f){ return path.basename(f); });
-			res.render('explore.jade', { names: files});
-		});
+		files = files.filter(function(f){ return f.indexOf("img/bad") == -1; });
+		files = files.map(function(f){ return path.basename(f); });
+		filenames = filenames.concat(files);
+	});
+
+	app.get('/', function(req, res){
+		//files = files.map(function(f){ return path.basename(f); });
+		res.render('explore.jade', { names: filenames});
 	});
 
 	app.get('/palette/:filename', getPalette);

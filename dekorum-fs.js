@@ -73,8 +73,8 @@ function loadFilenames(dir, callback){
 		}
 		else {
 			console.log("Loaded " + files.length + " filenames from " + dir);
-			callback(err, files);
 		}
+		callback(err, files);
 	}
 	if(is_s3(dir)){
 		result = loadFilenamesS3(dir, cb);
@@ -105,8 +105,8 @@ function loadFilenamesS3(dir, callback, markerKey){
 				.filter(function(x){ return x.match(/^img\/\w/); });
 		var cbfiles = files.map(function(x) { return "s3://" + bucket + "/" + x; });
 		async.series([
-			function(){ callback(err, cbfiles); },
-			function(){
+			function(ac){ callback(err, cbfiles); ac(null, null); },
+			function(ac){
 				if(data.IsTruncated){
 					var markerKey = files[files.length-1];
 					console.log("S3 paging forward from " + markerKey);
