@@ -1,5 +1,6 @@
 var fs = require('fs');
 var path = require('path');
+var async = require('async');
 var imgproc = require('./dekorum-imgproc');
 var dfs = require('./dekorum-fs');
 
@@ -12,34 +13,29 @@ module.exports = {
 // TODO: Force/overwrite param
 function frame(indir, outdir){
 	dfs.loadFilteredFilenames(indir, function(err, filenames){
-		var convert = function(filename){
-			if(!filename){
-				return;
-			}
+		// TODO: Consider adding concurrency here -- like async.eachLimit
+		async.eachSeries(filenames, function(filename, callback){
 			var outfile = outdir + "/" + path.basename(filename) + ".png";
 			dfs.exists(outfile, function(exists){
 				if(exists){
 					console.log("Skipping " + filename + " (exists)");
-					return convert(filenames.shift(), filenames);
+					callback(null);
 				}
-				imgproc.make720p(filename, function(err, png){
-					if(err){
-						return convert(filenames.shift(), filenames);
-					}
-					console.log("Writing outfile: " + outfile);
-					dfs.writeFile(png, outfile, function(err, data){
-						if(err){
-							console.log("Error writing file: " + err);
-							return;
-						}
-						console.log("Done writing file: " + outfile);
-						convert(filenames.shift(), filenames);
-					});
-				});
 			});
-		}
-
-		// TODO: Consider adding concurrency here -- like async.eachLimit
-		convert(filenames.shift(), filenames);
+			imgproc.make720p(filename, function(err, png){
+				if(err){
+					callback(err);
+				}
+				console.log("Writing outfile: " + outfile);
+				dfs.writeFile(png, outfile, function(err, data){
+					if(err){
+						console.log("Error writing file: " + err);
+						callback(err);
+					}
+					console.log("Done writing file: " + outfile);
+				});
+				callback(null);
+			});
+		});
 	});
 }

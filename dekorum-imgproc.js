@@ -4,6 +4,10 @@ var PNG = require('pngjs').PNG;
 var autocrop = require('./dekorum-autocrop');
 var sstitch = require('./dekorum-sstitch');
 
+module.exports = {
+    make720p: make720p 
+};
+
 function newEmptyPng(){
 	var png = new PNG({
 		'width': 1280, 'height': 720, filterType: -1
@@ -94,7 +98,3 @@ function make720p(filename, callback){
 		});
 	});
 }
-
-module.exports = {
-    make720p: make720p 
-};

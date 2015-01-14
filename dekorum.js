@@ -5,6 +5,7 @@ var download = require('./dekorum-download');
 var explore = require('./dekorum-explore');
 var framer = require('./dekorum-framer');
 var stage = require('./dekorum-stage');
+var meta = require('./dekorum-meta');
 
 program.version('0.0.1')
     .option('-s, --scrape', 'Scrape mode')
@@ -16,6 +17,7 @@ program.version('0.0.1')
 	.option('-f, --frames', 'Convert images in <indir> to frames in <outdir>')
 	.option('-S, --Stage <mode>', 'Stage frames into <outdir> with <mode> = [rand]')
 	.option('-n, --num <num>', 'Stage only <num> frames')
+	.option('-m, --meta', 'Compute metadata from frames in <indir> to <outdir>')
     .parse(process.argv);
 
 function defaultOutDir(){
@@ -59,6 +61,12 @@ else if(program.Stage){
 	defaultOutDir();
 	console.log("Let's stage some frames for video...");
 	stage.stage(program.indir, program.outdir, program.Stage, program.num);
+}
+else if(program.meta){
+	requireInDir('meta');
+	defaultOutDir();
+	console.log("Calculating metadata (palette, entropy, etc)...");
+	meta.calculate(program.indir.replace(/\/+$/, ''), program.outdir.replace(/\/+$/, ''));
 }
 else {
     console.log("Must choose one of --scrape or --download or --explore or --frames or --Stage");

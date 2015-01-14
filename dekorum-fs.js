@@ -59,6 +59,10 @@ function loadFilteredFilenames(dir, callback){
 			cbfiles = files.filter(function(f){ 
 				return path.basename(f).indexOf(FILTER_PREFIX) != 0;
 			});
+			console.log('Removing potentially "bad" files...');
+			cbfiles = cbfiles.filter(function(f){
+				return !f.match(/bad\//);
+			});
 			console.log(cbfiles.length + " files are remaining.");
 		}
 		callback(err, cbfiles);
@@ -91,7 +95,7 @@ function buildS3(){
 	return new aws.S3();
 }
 
-function loadFilenamesS3(dir, callback, markerKey){
+function loadFilenamesS3(dir, callback, markerKey, results){
 	var s3 = buildS3();
 	var bucket = s3BucketFromUri(dir);
 	console.log("Loading files from s3 bucket " + bucket + " (at marker = " + markerKey + ")");
@@ -99,21 +103,23 @@ function loadFilenamesS3(dir, callback, markerKey){
 	if(markerKey){
 		params['Marker'] = markerKey;
 	}
+	if(!results){
+		results = [];
+	}
 	s3.listObjects(params, function(err, data){
 		var files = data.Contents
 				.map(function(x) { return x.Key; })
 				.filter(function(x){ return x.match(/^img\/\w/); });
 		var cbfiles = files.map(function(x) { return "s3://" + bucket + "/" + x; });
-		async.series([
-			function(ac){ callback(err, cbfiles); ac(null, null); },
-			function(ac){
-				if(data.IsTruncated){
-					var markerKey = files[files.length-1];
-					console.log("S3 paging forward from " + markerKey);
-					loadFilenamesS3(dir, callback, markerKey);
-				}
-			}
-		]);
+		results = results.concat(cbfiles);
+		if(data.IsTruncated){
+			var markerKey = files[files.length-1];
+			console.log("S3 paging forward from " + markerKey);
+			loadFilenamesS3(dir, callback, markerKey, results);
+		}
+		else {
+			callback(err, results); 
+		}
 	});
 }
 

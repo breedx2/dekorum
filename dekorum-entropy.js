@@ -15,7 +15,6 @@ function rgbaToInt(pixelData, offset){
 
 function histogram(pixelData){
 	var histogram = {};
-	console.log("DEBUG: length = " + pixelData.length);
 	for(var i=0; i < pixelData.length; i += 4){
 		var val = rgbaToInt(pixelData, i);
 		if(histogram[val]){
