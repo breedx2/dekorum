@@ -22,6 +22,11 @@ function s3BucketFromUri(uri){
 }
 
 function s3PrefixFromUri(uri){
+	var bucket = s3BucketFromUri(uri);
+	return uri.slice( uri.indexOf(bucket) + bucket.length);
+}
+
+function s3PrefixFromUri(uri){
 	var result = uri.slice("s3://".length + s3BucketFromUri(uri).length);
 	if(result[0] == '/'){
 		return result.slice(1);
@@ -98,22 +103,31 @@ function buildS3(){
 function loadFilenamesS3(dir, callback, markerKey, results){
 	var s3 = buildS3();
 	var bucket = s3BucketFromUri(dir);
-	console.log("Loading files from s3 bucket " + bucket + " (at marker = " + markerKey + ")");
+	var prefix = s3PrefixFromUri(dir);
+	console.log("Loading files from s3 bucket", bucket, "(at marker =", markerKey + ", prefix", prefix + ")");
 	var params = { Bucket: bucket };
 	if(markerKey){
 		params['Marker'] = markerKey;
+	}
+	if(prefix){
+		params['Prefix'] = prefix;
 	}
 	if(!results){
 		results = [];
 	}
 	s3.listObjects(params, function(err, data){
+		if(err) {
+			console.log("S3 error: " + err);
+		}
+		console.log(data);
 		var files = data.Contents
 				.map(function(x) { return x.Key; })
 				.filter(function(x){ return x.match(/^img\/\w/); });
+				//TODO: Fix ^^^^ do not include hard coded path component!
 		var cbfiles = files.map(function(x) { return "s3://" + bucket + "/" + x; });
 		results = results.concat(cbfiles);
 		if(data.IsTruncated){
-			var markerKey = files[files.length-1];
+			var markerKey = data.Contents[data.Contents.length-1].Key;
 			console.log("S3 paging forward from " + markerKey);
 			loadFilenamesS3(dir, callback, markerKey, results);
 		}
