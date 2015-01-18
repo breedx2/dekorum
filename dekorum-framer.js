@@ -19,22 +19,22 @@ function frame(indir, outdir){
 			dfs.exists(outfile, function(exists){
 				if(exists){
 					console.log("Skipping " + filename + " (exists)");
-					callback(null);
+					return callback(null);
 				}
-			});
-			imgproc.make720p(filename, function(err, png){
-				if(err){
-					callback(err);
-				}
-				console.log("Writing outfile: " + outfile);
-				dfs.writeFile(png, outfile, function(err, data){
+				imgproc.make720p(filename, function(err, png){
 					if(err){
-						console.log("Error writing file: " + err);
 						callback(err);
 					}
-					console.log("Done writing file: " + outfile);
+					console.log("Writing outfile: " + outfile);
+					dfs.writeFile(png, outfile, function(err, data){
+						if(err){
+							console.log("Error writing file: " + err);
+							callback(err);
+						}
+						console.log("Done writing file: " + outfile);
+					});
+					return callback(null);
 				});
-				callback(null);
 			});
 		});
 	});
