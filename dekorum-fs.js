@@ -22,11 +22,6 @@ function s3BucketFromUri(uri){
 }
 
 function s3PrefixFromUri(uri){
-	var bucket = s3BucketFromUri(uri);
-	return uri.slice( uri.indexOf(bucket) + bucket.length);
-}
-
-function s3PrefixFromUri(uri){
 	var result = uri.slice("s3://".length + s3BucketFromUri(uri).length);
 	if(result[0] == '/'){
 		return result.slice(1);
@@ -36,7 +31,7 @@ function s3PrefixFromUri(uri){
 
 function s3Exists(file, callback){
 	//TODO: build me...
-	console.log("Checking to seee if " + file + " exists in s3...");
+	console.log("Checking to see if " + file + " exists in s3...");
 	var s3 = buildS3();
 	var bucket = s3BucketFromUri(file);
 	var key = s3PrefixFromUri(file);
