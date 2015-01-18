@@ -119,7 +119,6 @@ function loadFilenamesS3(dir, callback, markerKey, results){
 		if(err) {
 			console.log("S3 error: " + err);
 		}
-		console.log(data);
 		var files = data.Contents
 				.map(function(x) { return x.Key; })
 				.filter(function(x){ return x.match(/^img\/\w/); });
