@@ -19,6 +19,7 @@
 		"aws-sdk": "latest",
 		"async": "latest",
 		"thief": "latest",
-		"memory-streams": "latest"
+		"memory-streams": "latest",
+		"onecolor": "latest"
     }
 }

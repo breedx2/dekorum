@@ -1,10 +1,12 @@
 var thief = require('thief');
 var Canvas = thief.Canvas;
+var onecolor = require('onecolor');
 
 exports = module.exports
 
 module.exports = {
 	getPalette: getPalette,
+	rgbToHsv: rgbToHsv,
 };
 
 function getPalette(pngBuffer, width, height) {
@@ -19,4 +21,10 @@ function getPalette(pngBuffer, width, height) {
 	ctx.drawImage(img, 0, 0, width, height);
 	var palette = thief.createPalette(img, 5);
 	return palette;
+}
+
+function rgbToHsv(r, g, b){
+	var colorString = 'rgb(' + (r/255) + ',' + (g/255) + ',' + (b/255) + ')';
+	var color = onecolor(colorString);
+	return [color.hue(), color.saturation(), color.value()];
 }
