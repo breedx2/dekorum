@@ -31,6 +31,10 @@ html(lang=en)
 				each name in names
 					option(value=name)= name
 			p#size
+			p
+				button#viz(onclick='contentAnalyze()')
+					|content analyze
 		img#daimg
 		img#served
 		canvas#cnv(width=1280, height=720)
+		canvas#analyze(width=1280, height=720)

@@ -90,8 +90,8 @@ function exploreTile(){
 	$('#throbber').show();
 	$('#palette').hide();
 	$('#entropy').hide();
+	$('#analyze').hide();
 	$('#daimg').attr('src', '/' + selectedValue);
-	console.log("Setting flim to jim " + selectedValue);
 	$('#served').one('load', function(){ 
 		$('#throbber').hide();
 		updatePalette(selectedValue);
@@ -111,22 +111,41 @@ function exploreTile(){
 		}
 		var imageData = context.getImageData(0, 0, Math.min(1280, image.width), Math.min(720, image.height));
 		var leftRect = findLeftCropRect(imageData, 10);
-
-		/*context.strokeStyle = 'pink';
-		console.log("Left rect = " + JSON.stringify(leftRect));
-		if(leftRect.width > 0){
-			context.rect(0, 0, leftRect.width, leftRect.height);
-			context.stroke();
-		}
-		*/
 	};
 	image.src = imgUrl;
 }
 
-function showHideTiles(raw, canvas, served){
+function showHideTiles(raw, canvas, served, analyze){
 	raw ? $('#daimg').show() : $('#daimg').hide();
 	canvas ? $('#cnv').show() : $('#cnv').hide();
 	served ? $('#served').show() : $('#served').hide();
+	analyze ? $('#analyze').show() : $('#analyze').hide();
+}
+
+function contentAnalyze(){
+	console.log('analyzing...');
+	console.log("Width: " + $('#analyze').width());
+	var canvas = $('#analyze')[0];
+	var context = canvas.getContext('2d');
+	var image = new Image();
+	image.onload = function(){
+		console.log("Loaded.");
+		context.drawImage(image, 0, 0, canvas.width, canvas.height);
+		var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+		var data = imageData.data;
+		console.log("Data length = " + data.length);
+		for(var i = 0; i < data.length; i += 4) {
+			var brightness = 0.34 * data[i] + 0.5 * data[i + 1] + 0.16 * data[i + 2];
+			data[i + 0] = brightness;
+			data[i + 1] = brightness;
+			data[i + 2] = brightness;
+		}
+		console.log("Done analyzing!");
+		context.putImageData(imageData, 0, 0);
+	}
+	console.log("Setting new image source to " + $('#served').attr('src'));
+	image.src =  $('#served').attr('src');
+	showHideTiles(false, false, false, true);
 }
 
 $(document).ready(function() {
