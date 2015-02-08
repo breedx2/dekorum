@@ -138,6 +138,7 @@ function cie1994(lab1, lab2, isTextiles) {
     var dl = x.l - y.l;
     var dh = Math.sqrt(da * da + db * db - dc * dc);
  
-    return Math.sqrt(Math.pow((dl/(kl * sl)),2) + Math.pow((dc/(kc * sc)),2) + Math.pow((dh/(kh * sh)),2));
+    var result = Math.sqrt(Math.pow((dl/(kl * sl)),2) + Math.pow((dc/(kc * sc)),2) + Math.pow((dh/(kh * sh)),2));
+	return isNaN(result) ? 0 : result;
 };
  

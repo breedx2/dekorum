@@ -80,7 +80,6 @@ function updateEntropy(filename){
 		url: url,
 	}).done(function(data){
 		$('#entropy').text("Entropy: " + data.entropy.toFixed(3));
-		$('#entropy').show();
 	});
 }
 
@@ -89,7 +88,6 @@ function exploreTile(){
 	var imgUrl = '/' + selectedValue;
 	$('#throbber').show();
 	$('#palette').hide();
-	$('#entropy').hide();
 	$('#analyze').hide();
 	$('#daimg').attr('src', '/' + selectedValue);
 	$('#served').one('load', function(){ 
@@ -162,7 +160,7 @@ function findMedianPixelValue(imageData){
 function threshhold(imageData, medianPixel){
 	console.log("Performing threshhold at " + medianPixel);
 	for(var i = 0; i < imageData.data.length; i += 4) {
-		var val = 255; //white
+		var val = 65; //white
 		if(imageData.data[i + 0] >= medianPixel){
 			val = 0;
 		}
@@ -221,15 +219,28 @@ function pixelFromOffset(imageData, offset){
 }
 
 function measureHorizCrossings(imageData, y, crossingIndexes){
+	if(crossingIndexes.length == 0){
+		return { crossings: 0, min: 0, max: 0, sum: 0, avg: 0 };
+	}
 	function offset(x){
 		return 4*((imageData.width * y) + x);
 	}
-	crossingIndexes.forEach(function(x){
+	var deltas = crossingIndexes.map(function(x){
 		var rgbPixel = pixelFromOffset(imageData, offset(x));
 		var nextRgbPixel = pixelFromOffset(imageData, offset(x+1));
-		console.log("Pixel:", rgbPixel, "nextPixel:", nextRgbPixel, "delta-e:", colorDiff(rgbPixel, nextRgbPixel));
+		var delta = colorDiff(rgbPixel, nextRgbPixel);
+		return delta;
 	});
-	console.log("DERP", Math.max(2,9,21,33,7.8));
+	var sum = deltas.reduce(function(prev, cur){ return prev + cur; });
+	var min = Math.min.apply(Math, deltas);
+	var max = Math.max.apply(Math, deltas);
+	return {
+		crossings: deltas.length,
+		min: min,
+		max: max,
+		sum: sum,
+		avg: (sum/deltas.length)
+	};
 }
 
 function contentAnalyze(){
@@ -254,11 +265,12 @@ function contentAnalyze(){
 
 		var crossings = findHorizCrossings(imageData, 150);
 		console.log("Crossings at 150:", crossings);
-		measureHorizCrossings(originalImageData, 150, crossings[150]);
+		var crossData = measureHorizCrossings(originalImageData, 150, crossings[150]);
+		console.log(crossData);
 
 		highlightTransitions(imageData);
 		console.log("Median pixel value is: " + medianPixel);
-		console.log(hist);
+		//console.log(hist);
 
 		console.log("Done analyzing!");
 		context.putImageData(imageData, 0, 0);
