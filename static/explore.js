@@ -122,6 +122,116 @@ function showHideTiles(raw, canvas, served, analyze){
 	analyze ? $('#analyze').show() : $('#analyze').hide();
 }
 
+function makeGrayscale(imageData){
+	var data = imageData.data;
+	console.log("Data length = " + data.length);
+	for(var i = 0; i < data.length; i += 4) {
+		var brightness = 0.34 * data[i] + 0.5 * data[i + 1] + 0.16 * data[i + 2];
+		data[i + 0] = brightness;
+		data[i + 1] = brightness;
+		data[i + 2] = brightness;
+	}
+}
+
+function computeHistogram(imageData){
+	var data = imageData.data;
+	console.log("Data length = " + data.length);
+	var hist = [];
+	for(var i = 0; i < data.length; i += 4) {
+		var pixelVal = data[i];
+		if(hist[pixelVal]){
+			hist[pixelVal] = hist[pixelVal] + 1;
+		}
+		else{
+			hist[pixelVal] = 1;
+		}
+	}
+	return hist;
+}
+
+function findMedianPixelValue(imageData){
+	var j = 0;
+	var terse = [];
+	for(var i = 0; i < imageData.data.length; i += 4) {
+		terse[j++] = imageData.data[i];
+	}
+	terse.sort();
+	return terse[ terse.length / 2];
+}
+
+function threshhold(imageData, medianPixel){
+	console.log("Performing threshhold at " + medianPixel);
+	for(var i = 0; i < imageData.data.length; i += 4) {
+		var val = 255; //white
+		if(imageData.data[i + 0] >= medianPixel){
+			val = 0;
+		}
+		imageData.data[i + 0] = val;
+		imageData.data[i + 1] = val;
+		imageData.data[i + 2] = val;
+	}
+}
+
+function highlightTransitions(imageData){
+	var y = imageData.height/2;
+	console.log("Highlighting transitions at y =", y, "width", imageData.width, "height", imageData.height);
+	var distance = 0;
+	function offset(x){
+		return 4*((imageData.width * y) + x);
+	}
+	for(var x = 0; x < imageData.width - 1; x++){
+		var val = imageData.data[offset(x)];
+		var nextVal = imageData.data[offset(x+1)];
+		if(val != nextVal){
+			imageData.data[offset(x)+0] = 255;
+			imageData.data[offset(x)+1] = 0;
+			imageData.data[offset(x)+2] = 0;
+			distance++;
+		}
+		else {
+			imageData.data[offset(x)+0] = 255;
+			imageData.data[offset(x)+1] = 180;
+			imageData.data[offset(x)+2] = 180;
+			distance = 0;
+		}
+	}
+}
+
+function findHorizCrossings(imageData, y){
+	console.log("Finding crossings at y =", y, "width", imageData.width, "height", imageData.height);
+	var distance = 0;
+	var crossings = [];
+	function offset(x){
+		return 4*((imageData.width * y) + x);
+	}
+	for(var x = 0; x < imageData.width - 1; x++){
+		var val = imageData.data[offset(x)];
+		var nextVal = imageData.data[offset(x+1)];
+		if(val != nextVal){
+			crossings.push(x);
+		}
+	}
+	var result = {};
+	result[y] = crossings;
+	return result;
+}
+
+function pixelFromOffset(imageData, offset){
+	return [imageData.data[offset+0], imageData.data[offset+1], imageData.data[offset+2]];
+}
+
+function measureHorizCrossings(imageData, y, crossingIndexes){
+	function offset(x){
+		return 4*((imageData.width * y) + x);
+	}
+	crossingIndexes.forEach(function(x){
+		var rgbPixel = pixelFromOffset(imageData, offset(x));
+		var nextRgbPixel = pixelFromOffset(imageData, offset(x+1));
+		console.log("Pixel:", rgbPixel, "nextPixel:", nextRgbPixel, "delta-e:", colorDiff(rgbPixel, nextRgbPixel));
+	});
+	console.log("DERP", Math.max(2,9,21,33,7.8));
+}
+
 function contentAnalyze(){
 	console.log('analyzing...');
 	console.log("Width: " + $('#analyze').width());
@@ -132,14 +242,24 @@ function contentAnalyze(){
 		console.log("Loaded.");
 		context.drawImage(image, 0, 0, canvas.width, canvas.height);
 		var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-		var data = imageData.data;
-		console.log("Data length = " + data.length);
-		for(var i = 0; i < data.length; i += 4) {
-			var brightness = 0.34 * data[i] + 0.5 * data[i + 1] + 0.16 * data[i + 2];
-			data[i + 0] = brightness;
-			data[i + 1] = brightness;
-			data[i + 2] = brightness;
-		}
+		var originalImageData = {
+			width: imageData.width,
+			height: imageData.height,
+			data: new Uint8ClampedArray(imageData.data)
+		};
+		makeGrayscale(imageData);
+		var hist = computeHistogram(imageData);
+		var medianPixel = findMedianPixelValue(imageData);
+		threshhold(imageData, medianPixel);
+
+		var crossings = findHorizCrossings(imageData, 150);
+		console.log("Crossings at 150:", crossings);
+		measureHorizCrossings(originalImageData, 150, crossings[150]);
+
+		highlightTransitions(imageData);
+		console.log("Median pixel value is: " + medianPixel);
+		console.log(hist);
+
 		console.log("Done analyzing!");
 		context.putImageData(imageData, 0, 0);
 	}
