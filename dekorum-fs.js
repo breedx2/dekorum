@@ -116,8 +116,10 @@ function loadFilenamesS3(dir, callback, markerKey, results){
 		}
 		var files = data.Contents
 				.map(function(x) { return x.Key; })
-				.filter(function(x){ return x.match(/^img\/\w/); });
-				//TODO: Fix ^^^^ do not include hard coded path component!
+				.filter(function(x) { 
+					var regex = new RegExp('^' + prefix + '\/?$');
+					return !x.match(regex);
+				});
 		var cbfiles = files.map(function(x) { return "s3://" + bucket + "/" + x; });
 		results = results.concat(cbfiles);
 		if(data.IsTruncated){
